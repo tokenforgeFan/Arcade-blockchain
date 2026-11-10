@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Arcade du MOOC Blockchain</title>
+<meta name="theme-color" content="#2B3FD6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arcade">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} html,body{overscroll-behavior-y:none}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+</head>
+<body>
+<style>
+/* Layout : une colonne ; accueil = les 7 sessions ; chaque session = 3 jeux + fiches ; barre du haut fixe pour revenir et ouvrir les fiches. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --ink:#131A2B; --muted:#5A6478; --line:#D5DAE4;
+  --accent:#2B3FD6; --on-accent:#FFFFFF; --accent-soft:#E3E7FB;
+  --yes:#0E8A5F; --yes-bg:#DDF3EA; --no:#C8402F; --no-bg:#FBE4DF; --gold:#B7791F; --gold-bg:#FBF0DC;
+  --display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1422; --surface:#182033; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2A344C;
+  --accent:#8C9BFF; --on-accent:#0F1422; --accent-soft:#232C4D;
+  --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0F1422; --surface:#182033; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2A344C;
+  --accent:#8C9BFF; --on-accent:#0F1422; --accent-soft:#232C4D;
+  --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark }
+
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{user-select:none;-webkit-user-select:none}
+.wrap{max-width:760px;margin:0 auto;padding-block:16px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.8rem,6vw,2.5rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.4rem;font-weight:700} h3{font-size:1.05rem;font-weight:500}
+p{margin:0}
+.oui{color:var(--yes)} .non{color:var(--no)} .muted{color:var(--muted)} .small{font-size:.9rem}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:6px 2px}
+.pill{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:inherit;color:var(--ink);cursor:pointer;font-weight:600}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:600;cursor:pointer;align-self:flex-start}
+.btn:hover{filter:brightness(1.08)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.sess{display:flex;flex-direction:column;gap:10px}
+.scard{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
+.scard:hover{border-color:var(--accent);transform:translateX(3px)}
+.scard .num{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-family:var(--mono);font-weight:700;font-size:1.1rem}
+.scard .tx{min-width:0;display:flex;flex-direction:column;gap:2px}
+.scard b{font-family:var(--display);font-size:1.15rem;line-height:1.2}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--gold)}
+.game{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:16px;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
+.game:hover{border-color:var(--accent);transform:translateY(-2px)}
+.game .g{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.game .g b{font-family:var(--display);font-size:1.2rem}
+.game .rec{flex:none;text-align:right;font-size:.82rem;color:var(--muted)}
+.game .rec b{display:block;font-family:var(--mono);font-size:1.05rem;color:var(--gold)}
+.tag{flex:none;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:.8rem}
+.tag.a{background:var(--yes-bg);color:var(--yes)} .tag.b{background:var(--accent-soft);color:var(--accent)} .tag.c{background:var(--no-bg);color:var(--no)} .tag.d{background:var(--gold-bg);color:var(--gold)}
+
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.hud{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.hud b{font-family:var(--mono);font-size:1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:28px 20px;min-height:150px;display:grid;place-items:center;text-align:center;
+  font-family:var(--display);font-size:1.35rem;font-weight:500;line-height:1.3;text-wrap:balance}
+.vf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vf button{border:0;border-radius:14px;padding:18px 10px;font-family:var(--display);font-size:1.3rem;font-weight:700;cursor:pointer}
+.vf .f{background:var(--no-bg);color:var(--no)} .vf .v{background:var(--yes-bg);color:var(--yes)}
+.fb{border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.fb.ok{background:var(--yes-bg)} .fb.ko{background:var(--no-bg)} .fb.ne{background:var(--accent-soft)}
+.fb .res{font-family:var(--mono);font-weight:700} .fb.ok .res{color:var(--yes)} .fb.ko .res{color:var(--no)} .fb.ne .res{color:var(--accent)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip:disabled{opacity:.4;text-decoration:line-through;cursor:default}
+.def{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;color:inherit;cursor:pointer}
+.def:not(:disabled):hover{border-color:var(--accent)}
+.def.done{background:var(--yes-bg);border-color:var(--yes);cursor:default}
+.def.bad{background:var(--no-bg);border-color:var(--no)}
+.def b{color:var(--yes)}
+
+.mkt{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mkt div{border-radius:12px;padding:12px;text-align:center;font-weight:600}
+.mkt .o{background:var(--yes-bg);color:var(--yes)} .mkt .n{background:var(--no-bg);color:var(--no)} .mkt .z{background:var(--accent-soft);color:var(--accent)}
+.mkt b{display:block;font-family:var(--mono);font-size:1.45rem;overflow-wrap:anywhere}
+.choice{display:flex;justify-content:space-between;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:14px;font:inherit;font-weight:600;color:inherit;cursor:pointer}
+.choice:hover{border-color:var(--accent)}
+.choice span{font-family:var(--mono);font-weight:500;font-size:.85rem;color:var(--muted);flex:none}
+.big{font-family:var(--mono);font-size:2.3rem;font-weight:700;line-height:1}
+.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end}
+.line{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px}
+.line>span:first-child{min-width:0}
+.miss{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:2px;font-size:.94rem}
+input.search{width:100%;box-sizing:border-box;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+.fiche{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+@media (min-width:700px){ body{font-size:17px} .card{font-size:1.55rem;min-height:180px} .vf button{padding:24px 10px;font-size:1.5rem} .choice,.def{padding:16px} .chip{padding:11px 18px} }
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <button class="link" data-act="home" id="crumb" style="padding-left:0">Arcade · MOOC Blockchain</button>
+    <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="pill" data-act="snd" id="sbtn">Son : oui</button>
+      <button class="pill" data-act="fiches" id="fbtn">Fiches</button>
+    </span>
+  </div>
+  <main id="app" class="stack"></main>
+</div>
+
+<script>
+const SESSIONS=[]; const rnd = p => Math.random() < p;
+SESSIONS.push({id:"s1", n:1, title:"Introduction à la blockchain et au Web3", short:"Blockchain et Web3",
+sim:{name:"Le Registre", tag:"SIM", desc:"Tu es commerçant, utilisateur et curieux du Web3. Cinq situations où le registre, le hash et les clés font toute la différence."},
+notions:[
+ ["Blockchain","Un registre partagé où l'on ajoute des blocs sans pouvoir réécrire les anciens","Des milliers d'ordinateurs gardent la même copie"],
+ ["Nœud","Un ordinateur qui garde une copie du registre et vérifie lui-même les règles","Il refuse un bloc qui contient une double dépense"],
+ ["Double dépense","Dépenser deux fois la même unité numérique","Le problème que la blockchain règle sans banque"],
+ ["Fonction de hachage","Transforme n'importe quelle donnée en une empreinte de taille fixe","SHA-256 pour Bitcoin"],
+ ["Effet avalanche","Changer un seul caractère donne une empreinte totalement différente","« bonjour » et « Bonjour » ont des hash sans rapport"],
+ ["Chaînage des blocs","Chaque bloc contient l'empreinte du bloc précédent","Modifier un vieux bloc casse tous les suivants"],
+ ["Immuabilité","Réécrire l'historique est si coûteux que c'est pratiquement impossible","Une question de coût, pas une impossibilité absolue"],
+ ["Clé privée","Le secret qui sert à signer les transactions","Qui a la clé privée a les fonds"],
+ ["Clé publique","Sert à vérifier une signature ; l'adresse en dérive","Elle se partage sans danger"],
+ ["Signature numérique","Prouve que le détenteur de la clé a autorisé un message non modifié","Elle ne dit rien de ton identité civile"],
+ ["Preuve de travail","Les mineurs cherchent un hash sous une cible : tricher coûte de l'électricité","Bitcoin, depuis le bloc genèse du 3 janvier 2009"],
+ ["Preuve d'enjeu","Les validateurs bloquent des jetons qu'ils perdent s'ils trichent","Ethereum depuis 2022, Cardano"],
+ ["Blockchain permissionnée","Une blockchain où seuls des participants autorisés valident","Une chaîne d'entreprise, contrairement à Bitcoin"],
+ ["Contrat intelligent","Un programme sur la blockchain qui s'exécute tout seul selon ses règles","Une assurance qui rembourse automatiquement un vol en retard"],
+ ["Oracle","Le service qui apporte à la blockchain des données du monde extérieur","L'heure réelle d'arrivée d'un avion"],
+ ["NFT","Un jeton unique, non interchangeable avec un autre","Un billet de concert numéroté"],
+ ["Stablecoin","Une crypto dont la valeur suit un actif de référence, souvent le dollar","USDC ou USDT"],
+ ["Web3","Le web où l'on lit, écrit et possède ses actifs via ses clés","Après le Web1 (lire) et le Web2 (lire et écrire)"],
+ ["Trilemme de la blockchain","Difficile d'avoir à la fois décentralisation, sécurité et scalabilité","Des blocs plus gros = moins de nœuds"],
+ ["Couche 2","Traite les transactions hors de la chaîne principale puis y règle le résultat","Lightning pour Bitcoin, les rollups pour Ethereum"]
+],
+vf:[
+ ["Une blockchain est un registre où l'on peut réécrire facilement les anciens blocs.",false,"On n'ajoute que de nouveaux blocs. Modifier un ancien bloc casserait tous les liens qui suivent."],
+ ["Changer une seule lettre de l'entrée change complètement le hash.",true,"C'est l'effet avalanche : toute falsification devient visible."],
+ ["Chaque bloc contient le hash du bloc précédent.",true,"C'est ce chaînage qui rend l'historique si difficile à modifier."],
+ ["L'immuabilité d'une blockchain est absolue, même en théorie.",false,"Elle est pratique et économique : réécrire coûterait plus que tout le reste du réseau."],
+ ["La blockchain a résolu le problème de la double dépense sans tiers de confiance.",true,"Le registre partagé et le consensus remplacent la banque."],
+ ["Un nœud garde une copie du registre et vérifie les règles.",true,"Il rejette tout bloc ou toute transaction invalide."],
+ ["On signe une transaction avec sa clé publique.",false,"On signe avec la clé privée. La clé publique sert à vérifier."],
+ ["Une signature valide prouve l'identité civile de l'expéditeur.",false,"Elle prouve l'autorisation et l'intégrité, pas qui tu es dans la vie réelle."],
+ ["Le Web3 se résume par « lire, écrire et posséder ».",true,"Le Web1 permettait de lire, le Web2 d'écrire, le Web3 ajoute la propriété."],
+ ["En preuve de travail, le mineur cherche un hash inférieur à une cible.",true,"Il essaie des milliards de valeurs du nonce jusqu'à y arriver."],
+ ["En preuve d'enjeu, la sécurité vient de l'électricité consommée.",false,"Elle vient des jetons mis en jeu, que le validateur perd s'il triche."],
+ ["N'importe qui peut participer à une blockchain permissionnée.",false,"C'est le cas d'une blockchain publique. Une permissionnée contrôle l'accès."],
+ ["Le bloc genèse de Bitcoin a été miné en janvier 2009.",true,"Le 3 janvier 2009. Le livre blanc date d'octobre 2008."],
+ ["Un contrat intelligent est un contrat papier signé chez un notaire.",false,"C'est un programme sur la blockchain qui s'exécute automatiquement."],
+ ["Une blockchain peut lire seule le cours de l'euro sur Internet.",false,"Elle ne voit pas le monde extérieur : il lui faut un oracle."],
+ ["Un NFT est interchangeable avec n'importe quel autre NFT.",false,"Non fongible veut dire unique : un NFT ne vaut pas forcément le voisin."],
+ ["Un stablecoin ne peut jamais perdre son ancrage.",false,"Sa stabilité dépend des réserves ou du mécanisme qui le soutient."],
+ ["Le trilemme oppose décentralisation, sécurité et scalabilité.",true,"Gagner en débit se paie souvent en décentralisation."],
+ ["Une couche 2 remplace complètement la blockchain principale.",false,"Elle traite les transactions à côté et règle le résultat sur la couche 1, dont elle garde la sécurité."],
+ ["Lightning est une couche 2 de Bitcoin.",true,"Les rollups comme Arbitrum ou Base jouent ce rôle pour Ethereum."],
+ ["Qui possède la clé privée contrôle les fonds.",true,"C'est pour cela qu'on ne la partage jamais."],
+ ["Ton adresse de réception se partage sans danger.",true,"Elle dérive de la clé publique. Elle permet de recevoir, pas de dépenser."],
+ ["Un oracle mal informé peut faire exécuter un contrat dans le mauvais sens.",true,"Le contrat exécute ce qu'on lui dit. L'oracle est un point de confiance."],
+ ["USDC est un exemple de NFT.",false,"USDC est un stablecoin fongible : un USDC vaut n'importe quel autre USDC."]
+],
+sc:[
+ {t:"Le vélo du pressé", c:"Double dépense et confirmations", q:"Un client paie ton vélo en crypto et veut partir tout de suite.", facts:[["Prix du vélo","150 $"],["Confirmations","0"]],
+  lesson:"Une transaction non confirmée n'est pas encore dans un bloc : l'expéditeur peut tenter d'envoyer les mêmes fonds ailleurs. Chaque bloc ajouté au-dessus rend l'annulation plus improbable. Pour un montant important, on attend plusieurs confirmations.",
+  nodes:{a:{x:"Le paiement apparaît dans ton portefeuille, mais il n'est encore inclus dans aucun bloc.", ch:[
+   {l:"Donner le vélo tout de suite", f:()=> Math.random()<.5 ? {d:-150,r:"Le client a envoyé les mêmes fonds à sa propre adresse avec plus de frais. Le réseau n'a gardé que sa seconde transaction : double dépense réussie, tu perds le vélo."} : {d:20,r:"La transaction a fini par être confirmée. Tu gagnes ta marge de 20 $, mais tu as joué à pile ou face."}},
+   {l:"Attendre quelques confirmations", s:"≈ 30 min", f:()=>({d:20,r:"Trois blocs plus tard, le paiement est solidement inscrit. Le client râle un peu, tu gagnes ta marge de 20 $ sans risque."})},
+   {l:"Refuser la crypto", f:()=>({d:0,r:"Pas de vente, pas de risque. Mais quelques minutes d'attente auraient suffi à sécuriser le paiement."})}]}}},
+ {t:"Le logiciel trop pressé", c:"Hachage et effet avalanche", q:"Tu télécharges un portefeuille depuis un lien trouvé sur un forum.", facts:[["Empreinte officielle","…a3f9c"],["Empreinte du fichier","…a3f8c"]],
+  lesson:"Le site officiel publie l'empreinte (hash) du fichier. Si ton fichier a été modifié, même d'un octet, son empreinte change complètement. Comparer les empreintes permet de repérer un logiciel piégé.",
+  nodes:{a:{x:"Le site officiel publie l'empreinte SHA-256 du fichier. Les deux empreintes se ressemblent beaucoup.", ch:[
+   {l:"Installer, ça se ressemble", f:()=>({d:-150,r:"Une seule différence suffit : le fichier a été modifié. C'était une version piégée qui a vidé ton portefeuille."})},
+   {l:"Comparer caractère par caractère", f:()=>({to:"b"})}]},
+  b:{x:"Un caractère diffère. Que fais-tu ?", ch:[
+   {l:"Supprimer et télécharger sur le site officiel", f:()=>({d:0,r:"Bonne décision. Le nouveau fichier a exactement la bonne empreinte : rien de perdu."})},
+   {l:"Installer quand même, un seul caractère c'est rien", f:()=>({d:-150,r:"Effet avalanche : un fichier authentique aurait donné exactement la même empreinte. Celui-ci était piégé."})}]}}},
+ {t:"Le paiement entre amis", c:"Clé privée et clé publique", q:"Un ami veut te rembourser 50 $ en crypto.", facts:[["À recevoir","50 $"],["Ton épargne","200 $"]],
+  lesson:"Pour recevoir, on donne son adresse, qui dérive de la clé publique. La clé privée (ou la phrase de récupération) permet de dépenser : la donner, c'est donner tout le portefeuille.",
+  nodes:{a:{x:"Il te demande « ta clé » pour t'envoyer l'argent.", ch:[
+   {l:"Lui envoyer mon adresse de réception", f:()=>({d:50,r:"Il envoie 50 $ à ton adresse. Tu as partagé exactement ce qu'il fallait."})},
+   {l:"Lui envoyer ma clé privée", f:()=>({d:-150,r:"Le message est intercepté sur une messagerie piratée. Avec la clé privée, on peut tout dépenser : ton épargne de 200 $ disparaît, ses 50 $ arrivent sur un portefeuille vide."})}]}}},
+ {t:"L'assurance retard", c:"Contrat intelligent et oracle", q:"Tu achètes une assurance retard pour ton vol : 100 $ versés si le retard dépasse 3 heures.", facts:[["Prime","10 $"],["Remboursement","100 $"]],
+  lesson:"Le contrat intelligent paie automatiquement, mais il ne voit pas l'aéroport : c'est l'oracle qui lui transmet l'heure d'arrivée. Un oracle peu fiable fait exécuter le contrat dans le mauvais sens.",
+  nodes:{a:{x:"Deux contrats identiques. Le premier lit l'heure d'arrivée chez plusieurs sources indépendantes. Le second, moins cher, chez un serveur anonyme.", ch:[
+   {l:"Le contrat à sources multiples", s:"prime 10 $", f:()=>({d:90,r:"Ton vol a 4 heures de retard. Les sources concordent et le contrat te verse 100 $ automatiquement."})},
+   {l:"Le contrat à serveur anonyme", s:"prime 5 $", f:()=>({d:-5,r:"Ton vol a 4 heures de retard, mais le serveur anonyme annonce « à l'heure ». Le contrat exécute ce qu'on lui dit : rien ne t'est versé."})},
+   {l:"Pas d'assurance", f:()=>({d:0,r:"Ton vol a eu 4 heures de retard, et tu n'avais rien pour te dédommager."})}]}}},
+ {t:"Le café quotidien", c:"Trilemme et couche 2", q:"Tu veux payer ton café tous les jours en crypto pendant un mois.", facts:[["Frais sur la chaîne","2 $"],["Frais en couche 2","≈ 0,01 $"]],
+  lesson:"La couche 1 est sûre et décentralisée, mais son débit est limité, donc ses frais montent. Une couche 2 comme Lightning traite des milliers de petits paiements à côté et n'inscrit sur la chaîne principale que l'ouverture et la clôture.",
+  nodes:{a:{x:"30 cafés à payer. Chaque paiement direct sur la chaîne principale coûte 2 $ de frais.", ch:[
+   {l:"Payer chaque café sur la chaîne principale", f:()=>({d:-60,r:"30 paiements × 2 $ = 60 $ de frais pour des cafés à 3 $. La couche 1 n'est pas faite pour ça."})},
+   {l:"Ouvrir un canal Lightning", s:"ouverture ≈ 2 $", f:()=>({d:-4,r:"Ouverture et fermeture du canal sur la chaîne (2 $ chacune), puis 30 paiements quasi gratuits : environ 4 $ de frais au total, au lieu de 60 $."})}]}}}
+]});
+
+SESSIONS.push({id:"s2", n:2, title:"Bitcoin et monnaie numérique", short:"Bitcoin et monnaie",
+sim:{name:"La Mine", tag:"SIM", desc:"Mineur, commerçant ou simple détenteur : cinq décisions où les frais, le halving et les forks pèsent sur ton capital."},
+notions:[
+ ["Plafond de 21 millions","L'offre maximale de bitcoins, fixée par le protocole","Personne ne peut en créer davantage"],
+ ["Halving","La division par deux de la subvention de bloc tous les 210 000 blocs","6,25 → 3,125 BTC en avril 2024"],
+ ["Subvention de bloc","Les nouveaux bitcoins versés au mineur qui trouve un bloc","3,125 BTC par bloc depuis 2024"],
+ ["Satoshi","La plus petite unité de bitcoin","1 sat = 0,00000001 BTC"],
+ ["Ajustement de difficulté","Recalcul tous les 2016 blocs pour garder un bloc toutes les 10 minutes","Environ toutes les deux semaines"],
+ ["Confirmation","Un bloc ajouté au-dessus de ta transaction","Six confirmations pour un gros montant"],
+ ["Mempool","La file d'attente des transactions pas encore incluses dans un bloc","Les mineurs y prennent d'abord celles qui paient le plus par octet"],
+ ["Frais de transaction","Payés selon la taille de la transaction en données et l'encombrement","Envoyer 0,001 ou 10 BTC peut coûter pareil"],
+ ["Bitcoin Pizza Day","Le premier achat connu d'un bien réel en bitcoin","22 mai 2010 : deux pizzas pour 10 000 BTC"],
+ ["Monnaie fiduciaire","Une monnaie dont la valeur repose sur la confiance et le cours légal","L'euro, le dollar depuis 1971"],
+ ["Fonctions de la monnaie","Moyen d'échange, unité de compte, réserve de valeur","Bitcoin se joue surtout sur la réserve de valeur"],
+ ["Or numérique","L'idée d'un actif rare dont l'offre est programmée et vérifiable","Comme l'or, mais l'offre est connue d'avance"],
+ ["CBDC","Une monnaie numérique émise et contrôlée par une banque centrale","L'euro numérique"],
+ ["ETF bitcoin au comptant","Un fonds coté qui donne une exposition au bitcoin sans gérer de clés","Autorisé aux États-Unis en janvier 2024"],
+ ["Lightning Network","Des paiements rapides via des canaux ouverts hors chaîne","On règle le solde final sur la chaîne"],
+ ["Pseudonymat","Les adresses ne portent pas de nom mais toutes les transactions sont publiques","L'analyse de chaîne peut relier une adresse à une personne"],
+ ["Soft fork","Un changement de règles compatible avec les anciens nœuds","SegWit (2017), Taproot (2021)"],
+ ["Hard fork","Un changement de règles incompatible qui peut scinder la chaîne","Bitcoin Cash, août 2017"],
+ ["Rémunération du mineur","Subvention de bloc plus frais des transactions incluses","Les frais devront prendre le relais"]
+],
+vf:[
+ ["Il n'y aura jamais plus de 21 millions de bitcoins.",true,"L'offre est plafonnée par le protocole."],
+ ["Le halving divise par deux le prix du bitcoin.",false,"Il divise par deux la subvention de bloc versée aux mineurs, pas le prix."],
+ ["Depuis avril 2024, la subvention est de 3,125 BTC par bloc.",true,"Elle passera à 1,5625 BTC vers 2028."],
+ ["Un bloc Bitcoin arrive en moyenne toutes les minutes.",false,"Environ toutes les 10 minutes."],
+ ["La difficulté s'ajuste tous les 2016 blocs.",true,"Environ toutes les deux semaines, pour revenir à 10 minutes par bloc."],
+ ["Un satoshi vaut un millionième de bitcoin.",false,"Un cent-millionième : 0,00000001 BTC."],
+ ["Les frais Bitcoin dépendent du montant envoyé.",false,"Ils dépendent de la taille de la transaction en données et de l'encombrement du réseau."],
+ ["Le mempool est la file d'attente des transactions non confirmées.",true,"Les mineurs choisissent d'abord celles qui paient le plus par octet."],
+ ["Six confirmations sont la référence historique pour un gros montant.",true,"Environ une heure d'attente."],
+ ["Le 22 mai 2010, deux pizzas ont été achetées pour 10 000 BTC.",true,"C'est le Bitcoin Pizza Day."],
+ ["L'euro est garanti par l'or stocké à la BCE.",false,"C'est une monnaie fiduciaire : sa valeur repose sur la confiance et le cours légal."],
+ ["Les trois fonctions de la monnaie sont échange, compte et réserve de valeur.",true,"Le débat sur Bitcoin porte surtout sur la réserve de valeur."],
+ ["Une CBDC est une crypto décentralisée.",false,"C'est une monnaie numérique émise et contrôlée par une banque centrale."],
+ ["Le Salvador a fait du bitcoin une monnaie légale en 2021.",true,"En septembre 2021. Ce statut a été assoupli en 2025 avec le FMI."],
+ ["Les ETF bitcoin au comptant ont été autorisés aux États-Unis en janvier 2024.",true,"Le 10 janvier 2024, par la SEC."],
+ ["Avec un ETF bitcoin, tu détiens tes propres clés privées.",false,"Tu as une exposition au prix, mais pas la garde des bitcoins."],
+ ["Lightning permet des paiements rapides via des canaux hors chaîne.",true,"Seuls l'ouverture et la clôture du canal passent sur la chaîne."],
+ ["Bitcoin est totalement anonyme.",false,"Il est pseudonyme : tout est public et l'analyse de chaîne peut remonter jusqu'à toi."],
+ ["Un soft fork reste compatible avec les anciens nœuds.",true,"SegWit et Taproot en sont des exemples."],
+ ["Bitcoin Cash est né d'un soft fork.",false,"D'un hard fork, en août 2017 : la chaîne s'est scindée en deux."],
+ ["Le mineur touche la subvention de bloc et les frais des transactions incluses.",true,"Quand la subvention baisse, les frais doivent prendre le relais."],
+ ["Si la puissance de minage double, les blocs arrivent plus vite pour toujours.",false,"Seulement jusqu'au prochain ajustement de difficulté, qui ramène à 10 minutes."],
+ ["Retirer depuis un exchange avec KYC relie ton adresse à ton identité.",true,"Tout ce qui en sort ensuite devient traçable."],
+ ["Le livre blanc de Bitcoin date d'octobre 2008.",true,"Le bloc genèse suit le 3 janvier 2009."]
+],
+sc:[
+ {t:"Le mempool bouché", c:"Frais et mempool", q:"Tu dois payer un fournisseur dans l'heure pour conclure une affaire.", facts:[["Gain de l'affaire","+40 $"],["Mempool","très chargé"]],
+  lesson:"Les mineurs choisissent les transactions qui paient le plus par unité de taille (sat/vB). Quand le mempool est chargé, des frais trop bas laissent la transaction bloquée. Payer le prix du marché suffit ; surpayer ne sert à rien.",
+  nodes:{a:{x:"Les frais conseillés pour passer dans le prochain bloc sont de 25 sat/vB.", ch:[
+   {l:"Mettre 1 sat/vB pour économiser", f:()=>({d:-50,r:"Ta transaction reste coincée dans le mempool pendant deux jours. L'affaire est perdue et ton fournisseur te facture une pénalité."})},
+   {l:"Mettre le tarif conseillé", s:"frais ≈ 5 $", f:()=>({d:35,r:"Incluse dans le bloc suivant. Affaire conclue : +40 $ moins 5 $ de frais."})},
+   {l:"Mettre 10 fois le tarif, pour être sûr", s:"frais ≈ 50 $", f:()=>({d:-10,r:"Incluse dans le bloc suivant aussi, mais tu as payé 50 $ de frais pour un gain de 40 $."})}]}}},
+ {t:"Le jour du halving", c:"Halving et rémunération des mineurs", q:"Tu exploites une petite ferme de minage. Le halving arrive demain.", facts:[["Revenu actuel","100 $ / jour"],["Coût d'électricité","70 $ / jour"]],
+  lesson:"Le halving divise par deux la subvention de bloc. Si le prix et les frais ne compensent pas, les machines les moins efficaces deviennent déficitaires et s'éteignent. Les frais de transaction devront peu à peu financer seuls la sécurité du réseau.",
+  nodes:{a:{x:"Après le halving, à prix inchangé, ton revenu tombe à 50 $ par jour. Que fais-tu ?", ch:[
+   {l:"Ne rien changer", f:()=>({d:-60,r:"50 $ de revenu pour 70 $ d'électricité : tu perds 20 $ par jour pendant trois jours avant de couper."})},
+   {l:"Passer à des machines plus efficaces", s:"coût 30 $", f:()=>({d:20,r:"Ton coût d'électricité tombe à 25 $ par jour. Avec 50 $ de revenu, tu redeviens rentable et rembourses vite les 30 $."})},
+   {l:"Éteindre la ferme", f:()=>({d:0,r:"Tu arrêtes les pertes. Beaucoup de mineurs font de même après un halving, puis la difficulté baisse pour ceux qui restent."})}]}}},
+ {t:"Les 50 petites pièces", c:"Taille de transaction et UTXO", q:"Ton portefeuille contient 50 petits paiements reçus. Tu devras bientôt tout envoyer d'un coup.", facts:[["Mempool aujourd'hui","presque vide"],["Mempool la semaine prochaine","chargé"]],
+  lesson:"Une transaction qui rassemble beaucoup d'entrées pèse lourd en données, donc coûte cher. Les regrouper (consolider) quand le réseau est calme réduit la facture le jour où l'envoi devient urgent.",
+  nodes:{a:{x:"Le réseau est calme aujourd'hui, mais la semaine prochaine, quand tu devras payer, il sera saturé.", ch:[
+   {l:"Les regrouper aujourd'hui en une seule pièce", s:"frais ≈ 3 $", f:()=>({d:-6,r:"3 $ aujourd'hui, puis la semaine prochaine un envoi léger d'une seule entrée : 3 $ de plus. 6 $ au total."})},
+   {l:"Tout envoyer la semaine prochaine", f:()=>({d:-45,r:"Une transaction à 50 entrées, en plein encombrement : 45 $ de frais. Le montant n'y est pour rien, c'est le poids qui coûte."})}]}}},
+ {t:"Le café sans frais", c:"Lightning Network", q:"Tu tiens un café. Des clients veulent payer leur expresso à 3 $ en bitcoin.", facts:[["Frais sur la chaîne","2 à 4 $"],["Frais Lightning","quelques sats"]],
+  lesson:"Sur la chaîne principale, les frais peuvent dépasser le prix d'un café et la confirmation prend 10 minutes. Lightning règle les petits paiements en une seconde pour quelques satoshis.",
+  nodes:{a:{x:"Comment acceptes-tu le bitcoin ?", ch:[
+   {l:"Uniquement sur la chaîne principale", f:()=>({d:-20,r:"Les clients refusent de payer 3 $ de frais et d'attendre 10 minutes pour un expresso. Ceux qui viennent pour payer en bitcoin repartent."})},
+   {l:"Avec Lightning", f:()=>({d:30,r:"Paiement en une seconde, frais négligeables. Ton café devient le rendez-vous des bitcoineurs du quartier."})},
+   {l:"Pas de bitcoin du tout", f:()=>({d:0,r:"Rien ne change. Tu passes à côté d'une clientèle, sans rien perdre."})}]}}},
+ {t:"Le fork d'août", c:"Hard fork et garde des clés", q:"Août 2017 : un hard fork crée une nouvelle chaîne, Bitcoin Cash.", facts:[["Tes BTC","valeur 100 $"],["Nouvelle chaîne","BCH"]],
+  lesson:"Un hard fork change les règles de façon incompatible : la chaîne se scinde. Chaque détenteur se retrouve avec le même solde sur les deux chaînes. Mais seul celui qui contrôle ses clés peut récupérer les nouveaux jetons ; sur une plateforme, c'est elle qui décide de les créditer ou non.",
+  nodes:{a:{x:"Juste avant le fork, où gardes-tu tes bitcoins ?", ch:[
+   {l:"Dans mon propre portefeuille", f:()=>({d:15,r:"Tes clés contrôlent aussi les BCH créés au moment du fork. Tu les récupères et les revends 15 $."})},
+   {l:"Sur une plateforme d'échange", f:()=> Math.random()<.5 ? {d:15,r:"La plateforme crédite les BCH à ses clients. Tu les revends 15 $, mais tu dépendais de son bon vouloir."} : {d:0,r:"La plateforme refuse de créditer les BCH. Tes clés ne t'appartenaient pas, tu n'as rien."}}]}}}
+]});
+
+SESSIONS.push({id:"s3", n:3, title:"Blockchains programmables : Cardano et Ethereum", short:"Cardano et Ethereum",
+sim:{name:"Le Labo des contrats", tag:"SIM", desc:"Tu utilises des contrats intelligents sur Ethereum et Cardano. Cinq choix où le gas, le staking et les ponts font gagner ou perdre."},
+notions:[
+ ["Ethereum","Une blockchain programmable lancée en 2015, conçue par Vitalik Buterin","Un « ordinateur mondial »"],
+ ["EVM","La machine virtuelle qui exécute les contrats à l'identique sur tous les nœuds d'Ethereum","Ethereum Virtual Machine"],
+ ["Gas","La quantité de calcul d'une transaction, payée en frais","Un envoi simple coûte 21 000 gas"],
+ ["The Merge","Le passage d'Ethereum à la preuve d'enjeu","Septembre 2022, plus de 99 % d'énergie en moins"],
+ ["Cardano","Une blockchain fondée par Charles Hoskinson, appuyée sur la recherche académique","Protocoles publiés et relus avant d'être codés"],
+ ["Ouroboros","La famille de protocoles de preuve d'enjeu de Cardano","Publiée avec des preuves de sécurité"],
+ ["Modèle à comptes","Le registre tient un solde par compte, comme une banque","Ethereum"],
+ ["UTXO","Des « pièces » que l'on dépense entièrement en récupérant la monnaie","Bitcoin"],
+ ["eUTXO","Les UTXO étendus de Cardano, auxquels on attache du code et des données","On connaît le résultat et les frais avant d'envoyer"],
+ ["Plutus","Le langage des contrats de Cardano, basé sur Haskell","Adapté à la vérification formelle"],
+ ["Lovelace","La plus petite unité de l'ADA","1 ADA = 1 000 000 lovelace"],
+ ["Délégation","Confier son pouvoir de staking à un pool sans perdre la garde de ses ADA","Les ADA restent dans ton portefeuille"],
+ ["Jetons natifs","Des jetons gérés directement par le registre, sans contrat intelligent","Sur Cardano ; sur Ethereum un ERC-20 est un contrat"],
+ ["Cardano Foundation","Entité suisse indépendante qui promeut l'adoption et la gouvernance","Basée à Zoug"],
+ ["Voltaire","L'ère de gouvernance décentralisée de Cardano","CIP-1694, vote on-chain, DReps"],
+ ["DAO","Une organisation dont les règles et les votes sont exécutés par des contrats","Les détenteurs de jetons votent, le code applique"],
+ ["DeFi","Des services financiers par contrats intelligents, sans intermédiaire","Uniswap, Aave, Minswap, Liqwid"],
+ ["Composabilité","Les protocoles s'assemblent comme des briques","Les « legos monétaires »"],
+ ["Pont (bridge)","Un service qui transfère des actifs d'une blockchain à une autre","Ronin, environ 600 M$ volés"],
+ ["Piratage de The DAO","Une faille de code exploitée en 2016, à l'origine d'un hard fork","Naissance d'Ethereum Classic"]
+],
+vf:[
+ ["Ethereum a été lancé en 2015.",true,"Vitalik Buterin l'avait décrit dès 2013."],
+ ["L'EVM sert à miner des bitcoins.",false,"Elle exécute les contrats intelligents d'Ethereum."],
+ ["Plus un contrat calcule, plus la transaction coûte de gas.",true,"Chaque opération a un coût en gas."],
+ ["Charles Hoskinson a cofondé Ethereum avant de lancer Cardano.",true,"Il a ensuite fondé IOHK, aujourd'hui Input Output."],
+ ["Cardano fonctionne en preuve de travail.",false,"Cardano utilise Ouroboros, une preuve d'enjeu."],
+ ["Ethereum utilise un modèle à comptes, Cardano un modèle eUTXO.",true,"Comptes = soldes ; UTXO = pièces."],
+ ["Sur Cardano, on peut savoir avant d'envoyer si une transaction réussira.",true,"Le modèle eUTXO permet de la valider localement."],
+ ["Plutus est basé sur le langage Solidity.",false,"Plutus est basé sur Haskell. Solidity est le langage principal d'Ethereum."],
+ ["Cardano privilégie la recherche évaluée par des pairs, quitte à aller moins vite.",true,"Les protocoles sont publiés et relus avant d'être codés."],
+ ["Déléguer ses ADA à un pool les bloque pendant un an.",false,"Le staking est liquide : les ADA restent dans ton portefeuille et disponibles."],
+ ["The Merge a fait passer Ethereum à la preuve d'enjeu en septembre 2022.",true,"Avec une consommation électrique réduite de plus de 99 %."],
+ ["La Cardano Foundation fixe le prix de l'ADA.",false,"Elle promeut l'adoption, l'éducation et la gouvernance. Le prix vient du marché."],
+ ["Voltaire est l'ère de gouvernance de Cardano.",true,"Avec la CIP-1694, le vote on-chain et les DReps."],
+ ["Sur Cardano, un jeton a besoin d'un contrat intelligent comme un ERC-20.",false,"Les jetons y sont natifs : le registre les gère directement."],
+ ["Une DAO applique les votes de ses membres par du code.",true,"Les détenteurs de jetons de gouvernance votent, le contrat exécute."],
+ ["Un contrat intelligent audité ne peut jamais être piraté.",false,"Un audit réduit le risque sans le supprimer."],
+ ["Le piratage de The DAO en 2016 a mené à la naissance d'Ethereum Classic.",true,"Ethereum a fait un hard fork pour annuler le vol ; la chaîne d'origine a continué."],
+ ["La composabilité permet à un protocole d'en utiliser un autre directement.",true,"Puissance des « legos monétaires », mais risques empilés."],
+ ["Les ponts sont rarement visés car ils contiennent peu de fonds.",false,"Ils concentrent de gros montants et une logique complexe : Ronin, Wormhole."],
+ ["1 ADA vaut 1 000 000 lovelace.",true,"En hommage à Ada Lovelace."],
+ ["Le wei est la plus petite unité de l'ADA.",false,"Le wei est celle de l'ETH. Pour l'ADA, c'est le lovelace."],
+ ["Sur Ethereum, une transaction qui échoue peut quand même coûter du gas.",true,"Le calcul effectué avant l'échec est payé."],
+ ["La Cardano Foundation est basée à Zoug, en Suisse.",true,"Elle travaille notamment avec les entreprises."],
+ ["Minswap et Liqwid sont des protocoles DeFi de Cardano.",true,"Uniswap et Aave en sont les équivalents connus sur Ethereum."]
+],
+sc:[
+ {t:"Le gas de midi", c:"Gas et congestion", q:"Tu veux faire un échange sur Uniswap, sans urgence.", facts:[["Prix du gas maintenant","très élevé"],["Frais estimés","40 $"]],
+  lesson:"Le gas mesure le calcul nécessaire ; son prix monte quand le réseau est encombré. Une opération non urgente coûte souvent bien moins cher aux heures calmes.",
+  nodes:{a:{x:"Un lancement de jeton populaire sature le réseau. Ton échange coûterait 40 $ de frais.", ch:[
+   {l:"Envoyer tout de suite", f:()=>({d:-40,r:"Tu paies 40 $ de frais pour un échange qui pouvait attendre."})},
+   {l:"Attendre la nuit", f:()=>({d:-4,r:"À 3 h du matin, le réseau est calme : le même échange coûte 4 $."})}]}}},
+ {t:"L'échange qui échoue", c:"Comptes contre eUTXO", q:"Ton échange a de bonnes chances d'échouer : le prix bouge vite.", facts:[["Ethereum","frais payés même en cas d'échec"],["Cardano","échec détecté avant l'envoi"]],
+  lesson:"Sur Ethereum, une transaction qui échoue a déjà consommé du calcul : on paie le gas quand même. Avec le modèle eUTXO de Cardano, le portefeuille valide la transaction localement avant l'envoi : on sait si elle passera et combien elle coûtera.",
+  nodes:{a:{x:"Tu peux faire le même échange sur Ethereum ou sur Cardano.", ch:[
+   {l:"Sur Ethereum, en espérant que ça passe", f:()=> Math.random()<.5 ? {d:15,r:"L'échange passe. +15 $ de gain moins des frais modestes."} : {d:-12,r:"Le prix a bougé, l'échange échoue. Tu paies quand même 12 $ de gas pour rien."}},
+   {l:"Sur Cardano", f:()=>({d:10,r:"Ton portefeuille simule la transaction : elle échouerait. Tu ajustes le prix avant l'envoi et l'échange passe. +10 $, aucun frais perdu."})}]}}},
+ {t:"Le pool trop généreux", c:"Délégation et garde des jetons", q:"Tu as 1 000 ADA et tu veux les faire travailler.", facts:[["Délégation classique","≈ 3 % par an"],["Site promis","40 % par an"]],
+  lesson:"Sur Cardano, déléguer à un pool ne déplace pas tes ADA : ils restent dans ton portefeuille, sous ta garde, disponibles à tout moment. Un site qui demande de lui envoyer tes jetons contre un rendement énorme n'a rien à voir avec la délégation.",
+  nodes:{a:{x:"Un site te propose 40 % par an si tu lui envoies tes ADA. La délégation officielle rapporte environ 3 %.", ch:[
+   {l:"Déléguer depuis mon portefeuille", f:()=>({d:6,r:"Tes ADA ne bougent pas, tu touches tes récompenses à chaque époque de 5 jours."})},
+   {l:"Envoyer mes ADA au site à 40 %", f:()=>({d:-150,r:"Le site disparaît une semaine plus tard. En envoyant tes ADA, tu en as perdu la garde."})}]}}},
+ {t:"Le pont tout neuf", c:"Ponts entre blockchains", q:"Tu veux déplacer des jetons d'une blockchain à une autre.", facts:[["Pont établi","frais 2 $"],["Nouveau pont","bonus de 20 $"]],
+  lesson:"Un pont verrouille des jetons sur une chaîne pour en émettre l'équivalent sur une autre. Il concentre d'énormes montants et une logique complexe : c'est une cible de choix, comme Ronin (environ 600 M$) ou Wormhole (environ 320 M$).",
+  nodes:{a:{x:"Un nouveau pont, ni audité ni éprouvé, offre un bonus de 20 $ à ses premiers utilisateurs.", ch:[
+   {l:"Le nouveau pont pour le bonus", f:()=> Math.random()<.4 ? {d:-100,r:"Le pont est piraté deux jours plus tard. Les jetons verrouillés sont volés et ta version de l'autre côté ne vaut plus rien."} : {d:20,r:"Tout se passe bien, tu touches le bonus. Mais tu as risqué 100 $ pour 20 $."}},
+   {l:"Le pont établi et audité", s:"frais 2 $", f:()=>({d:-2,r:"Transfert réussi pour 2 $ de frais. Aucun pont n'est sans risque, mais celui-ci a fait ses preuves."})}]}}},
+ {t:"La DAO miracle", c:"Risque des contrats intelligents", q:"Une nouvelle DAO d'investissement lève des fonds. Son code n'a jamais été audité.", facts:[["Rendement promis","+50 %"],["Audit","aucun"]],
+  lesson:"Un contrat intelligent exécute son code tel quel, failles comprises. En 2016, une faille dans The DAO a permis de vider environ un tiers de ses fonds et conduit au hard fork qui a donné Ethereum Classic. Un audit et du recul réduisent le risque sans le supprimer.",
+  nodes:{a:{x:"Tu peux y placer 100 $.", ch:[
+   {l:"Placer 100 $", f:()=> Math.random()<.6 ? {d:-100,r:"Un attaquant exploite une faille de réentrance et vide le contrat. Personne ne peut annuler."} : {d:50,r:"Pas de piratage cette fois. Tu gagnes 50 $, avec un risque énorme."}},
+   {l:"Lire d'abord le rapport d'audit", f:()=>({to:"b"})},
+   {l:"Passer", f:()=>({d:0,r:"Tu gardes ton capital. Trois semaines plus tard, la DAO est vidée par une faille."})}]},
+  b:{x:"Il n'existe aucun audit. Le code est publié depuis quatre jours.", ch:[
+   {l:"Placer quand même", f:()=> Math.random()<.6 ? {d:-100,r:"Le contrat est vidé par une faille. Tu avais l'information et tu as pris le risque."} : {d:50,r:"Tu gagnes 50 $. Le risque était pourtant visible."}},
+   {l:"Passer", f:()=>({d:0,r:"Bonne lecture. Trois semaines plus tard, la DAO est vidée par une faille."})}]}}}
+]});
+
+SESSIONS.push({id:"s4", n:4, title:"Sécurité et confidentialité des portefeuilles", short:"Sécurité des portefeuilles",
+sim:{name:"Le Coffre", tag:"SIM", desc:"Tu protèges ton épargne crypto. Six pièges réels : faux support, matériel trafiqué, adresse empoisonnée, signature piégée."},
+notions:[
+ ["Not your keys, not your coins","Sans les clés privées, tu ne contrôles pas vraiment tes cryptos","Sur une plateforme, tu ne détiens qu'une créance"],
+ ["Garde personnelle","Détenir soi-même ses clés privées","Aucun intermédiaire ne peut bloquer tes fonds"],
+ ["Phrase de récupération","Les 12 ou 24 mots dont dérivent toutes les clés du portefeuille","Qui l'a contrôle les fonds"],
+ ["Passphrase","Un « 25e mot » qui ouvre un portefeuille caché","Oubliée, les fonds cachés sont perdus"],
+ ["Sauvegarde Shamir","La sauvegarde découpée en parts dont il faut un seuil minimal","2 parts sur 3 pour reconstituer"],
+ ["Multisig","Plusieurs clés distinctes doivent signer chaque transaction","2 sur 3 : une clé perdue ne suffit pas à tout perdre"],
+ ["Portefeuille matériel","Un appareil qui signe en interne : la clé privée n'en sort jamais","Trezor, Coldcard"],
+ ["Attaque de la chaîne d'approvisionnement","Un appareil trafiqué avant d'arriver chez toi","Une phrase déjà imprimée dans la boîte"],
+ ["Vérification sur l'écran","Seule l'adresse affichée sur le portefeuille matériel fait foi","Un malware peut changer l'adresse copiée"],
+ ["Empoisonnement d'adresse","Une adresse qui ressemble à la tienne glissée dans ton historique","Même début, même fin, milieu différent"],
+ ["Drainer","Un contrat qui vide tes jetons après une autorisation illimitée","Lis ce que tu signes, révoque les approbations"],
+ ["Portefeuille chaud","Connecté à Internet, pour de petits montants courants","Une appli sur ton téléphone"],
+ ["Portefeuille froid","Garde les clés hors ligne, pour l'épargne","Un portefeuille matériel rangé"],
+ ["Nœud complet personnel","Vérifier soi-même et ne pas révéler ses adresses à un serveur tiers","Un mini-PC relié à Sparrow"],
+ ["Air-gapped","Un appareil qui fonctionne sans connexion directe à l'ordinateur","Coldcard et sa carte microSD"],
+ ["PSBT","Une transaction partiellement signée qui passe d'un appareil à l'autre","Transite par carte mémoire"],
+ ["Transaction de test","Un petit envoi avant un gros pour vérifier adresse et réseau","10 $ d'abord, le reste ensuite"],
+ ["Support métal","Une plaque pour graver sa phrase, résistante au feu et à l'eau","Plutôt qu'une photo sur le téléphone"]
+],
+vf:[
+ ["« Not your keys, not your coins » signifie que sans clés privées, tu ne contrôles pas tes cryptos.",true,"FTX, Celsius ou AscendEX l'ont rappelé à leurs clients."],
+ ["La phrase de récupération est juste un mot de passe pour l'appli.",false,"C'est le portefeuille lui-même : toutes les clés en dérivent."],
+ ["Une photo de la phrase sur ton téléphone est une bonne sauvegarde.",false,"Jamais sur un appareil connecté. Papier ou métal, hors ligne."],
+ ["Un support technique légitime peut te demander ta phrase de récupération.",false,"Jamais. C'est l'arnaque la plus répandue."],
+ ["Donner seulement la moitié de sa phrase est sans danger.",false,"Une partie de la phrase réduit fortement la sécurité."],
+ ["Une passphrase oubliée ne peut pas être réinitialisée par le fabricant.",true,"Elle n'est stockée nulle part : les fonds du portefeuille caché sont perdus."],
+ ["Avec une passphrase, un voleur qui trouve les 24 mots ne voit pas le portefeuille caché.",true,"Il n'accède qu'au portefeuille sans passphrase."],
+ ["Avec Shamir 2 sur 3, une seule part révèle déjà une partie des fonds.",false,"Une part seule ne révèle rien. Il faut atteindre le seuil."],
+ ["Avec un multisig, la clé complète n'existe jamais en un seul endroit.",true,"Plusieurs clés distinctes signent chacune."],
+ ["Un multisig 2 sur 3 permet de perdre une clé sans perdre les fonds.",true,"Il supprime le point de défaillance unique."],
+ ["Une phrase déjà imprimée dans la boîte d'un portefeuille neuf est normale.",false,"C'est une attaque : quelqu'un d'autre connaît cette phrase."],
+ ["Un portefeuille matériel d'occasion à bas prix est une bonne affaire sans risque.",false,"Il a pu être modifié. Achète chez le fabricant ou un revendeur officiel."],
+ ["L'adresse affichée sur l'écran de l'ordinateur suffit à vérifier un envoi.",false,"Un malware peut la remplacer. Seul l'écran du portefeuille matériel fait foi."],
+ ["Vérifier seulement le début et la fin d'une adresse protège de l'empoisonnement d'adresse.",false,"L'attaquant imite justement le début et la fin. Vérifie l'adresse entière."],
+ ["Signer une autorisation illimitée peut permettre de vider tes jetons plus tard.",true,"C'est le principe des drainers. Révoque les approbations inutiles."],
+ ["Avec un portefeuille matériel, la clé privée ne quitte jamais l'appareil.",true,"Il signe en interne, même branché sur un ordinateur infecté."],
+ ["Un portefeuille chaud est connecté à Internet.",true,"On y garde de petits montants pour l'usage courant."],
+ ["Il est conseillé de garder toute son épargne sur un portefeuille chaud.",false,"L'épargne va au froid, hors ligne."],
+ ["Sans nœud personnel, le serveur interrogé peut voir tes adresses et ton solde.",true,"Ton propre nœud garde ces informations pour toi."],
+ ["Un Coldcard peut fonctionner sans câble vers l'ordinateur.",true,"Les transactions passent par carte microSD (PSBT)."],
+ ["Avant un gros envoi, un petit envoi de test est une bonne habitude.",true,"Il confirme l'adresse et le réseau."],
+ ["Une plaque en métal résiste mieux au feu qu'une feuille de papier.",true,"C'est pour cela qu'on l'utilise pour graver sa phrase."],
+ ["La passphrase se range de préférence au même endroit que la phrase.",false,"Séparément : sinon, qui trouve l'une trouve l'autre."],
+ ["Sur une plateforme d'échange, ton solde affiché t'appartient quoi qu'il arrive.",false,"C'est une créance. En cas de faillite ou de gel, elle peut être perdue."]
+],
+sc:[
+ {t:"Le faux support", c:"Phrase de récupération", q:"Un message du « support Trezor » t'alerte : ton portefeuille doit être resynchronisé.", facts:[["Ton épargne","200 $"],["Délai annoncé","24 h"]],
+  lesson:"La phrase de récupération, c'est le portefeuille. Aucun fabricant, aucune plateforme, aucun support ne la demandera jamais, ni en entier ni en partie. Un message pressant qui la réclame est toujours une arnaque.",
+  nodes:{a:{x:"Le message, très officiel, demande de saisir tes 24 mots sur un site pour éviter le blocage.", ch:[
+   {l:"Saisir mes 24 mots", f:()=>({d:-200,r:"Le site était un faux. En quelques minutes, ton portefeuille est vidé."})},
+   {l:"Ne donner que 12 mots, par prudence", f:()=>({d:-200,r:"Avec la moitié de la phrase, l'attaquant a assez d'avance pour trouver le reste par calcul. Tout est vidé."})},
+   {l:"Ignorer et signaler le message", f:()=>({d:0,r:"Bon réflexe. Ton portefeuille n'avait aucun problème."})}]}}},
+ {t:"La bonne affaire", c:"Provenance du matériel", q:"Tu achètes un portefeuille matériel en ligne, 40 % moins cher que chez le fabricant.", facts:[["Prix fabricant","100 $"],["Prix annonce","60 $"]],
+  lesson:"La phrase doit toujours être générée par l'appareil, devant toi. Un appareil d'occasion ou une boîte contenant déjà une phrase imprimée signale une attaque : quelqu'un d'autre connaît la clé.",
+  nodes:{a:{x:"Le colis arrive. Dans la boîte, une carte avec 24 mots déjà imprimés : « votre phrase de récupération ».", ch:[
+   {l:"Utiliser cette phrase, c'est pratique", f:()=>({d:-200,r:"Le vendeur avait gardé une copie. Dès que tu déposes ton épargne, elle est vidée."})},
+   {l:"Ne pas l'utiliser et racheter chez le fabricant", f:()=>({d:-60,r:"Les 60 $ de la fausse bonne affaire sont perdus, mais ton épargne est en sécurité sur un appareil qui a généré sa propre phrase devant toi."})}]}}},
+ {t:"L'adresse jumelle", c:"Empoisonnement d'adresse", q:"Tu renvoies des fonds vers ta propre adresse, copiée depuis ton historique.", facts:[["Ton adresse","bc1q7x…4m…9kf2"],["Adresse récente","bc1q7x…8z…9kf2"]],
+  lesson:"L'attaquant envoie une transaction minuscule depuis une adresse qui imite le début et la fin de la tienne, pour qu'elle apparaisse dans ton historique. Seule une vérification de l'adresse entière, sur l'écran du portefeuille matériel, protège.",
+  nodes:{a:{x:"Ton historique montre une adresse qui commence et finit comme la tienne. Elle vient d'apparaître après un dépôt de 0,0001 $.", ch:[
+   {l:"Copier l'adresse de l'historique", f:()=>({d:-150,r:"C'était l'adresse de l'attaquant : même début, même fin, milieu différent. Les fonds sont partis."})},
+   {l:"Vérifier l'adresse entière sur l'écran de l'appareil", f:()=>({d:0,r:"Le milieu ne correspond pas. Tu reprends ta vraie adresse depuis ton appareil : fonds en sécurité."})}]}}},
+ {t:"Le mint gratuit", c:"Autorisations et drainers", q:"Un site propose un NFT gratuit. Il te demande de signer.", facts:[["NFT","gratuit"],["Autorisation demandée","illimitée sur tes USDC"]],
+  lesson:"Une signature n'est pas anodine : une autorisation illimitée permet au contrat de retirer tes jetons plus tard, sans nouvelle demande. Lis ce que tu signes et révoque régulièrement les autorisations inutiles.",
+  nodes:{a:{x:"Ton portefeuille affiche : « Autoriser ce contrat à dépenser un montant illimité de vos USDC ».", ch:[
+   {l:"Signer, c'est juste un NFT gratuit", f:()=>({d:-150,r:"Le contrat était un drainer. Une heure plus tard, tous tes USDC sont retirés."})},
+   {l:"Refuser et quitter le site", f:()=>({d:0,r:"Un NFT gratuit n'a aucune raison de toucher à tes USDC. Bien vu."})}]}}},
+ {t:"Le 25e mot", c:"Passphrase", q:"Tu ajoutes une passphrase pour protéger ton épargne contre le vol de ta phrase.", facts:[["Phrase","24 mots sur plaque métal"],["Passphrase","à sauvegarder"]],
+  lesson:"La passphrase protège contre quelqu'un qui trouverait tes 24 mots, mais elle n'est stockée nulle part. Elle se sauvegarde sur un autre support, rangé ailleurs. L'oublier, c'est perdre les fonds ; la ranger avec la phrase, c'est l'annuler.",
+  nodes:{a:{x:"Où gardes-tu ta passphrase ?", ch:[
+   {l:"Dans ma tête uniquement", f:()=>({d:-200,r:"Deux ans plus tard, tu hésites entre trois variantes, majuscules comprises. Aucune n'ouvre le bon portefeuille : fonds perdus."})},
+   {l:"Sur la même plaque que les 24 mots", f:()=> Math.random()<.3 ? {d:-200,r:"Un cambrioleur emporte la plaque. Avec la phrase et la passphrase ensemble, il a tout."} : {d:0,r:"Rien ne s'est passé, mais la passphrase ne protégeait plus rien en étant rangée avec la phrase."}},
+   {l:"Sur un autre support, dans un autre lieu", f:()=>({d:0,r:"Un voleur qui trouve l'un n'a pas l'autre, et toi tu peux toujours tout récupérer."})}]}}},
+ {t:"Le gros virement", c:"Transaction de test", q:"Tu transfères toute ton épargne vers ton nouveau portefeuille froid.", facts:[["Montant","200 $"],["Réseau choisi","à vérifier"]],
+  lesson:"Une erreur de réseau ou d'adresse est irréversible. Un petit envoi de test, vérifié à l'arrivée, coûte quelques frais et évite de tout perdre.",
+  nodes:{a:{x:"Tu as recopié l'adresse et choisi un réseau dans la liste de la plateforme.", ch:[
+   {l:"Tout envoyer d'un coup", f:()=> Math.random()<.35 ? {d:-200,r:"Tu as choisi le mauvais réseau dans la liste. Les fonds arrivent sur une chaîne que ton portefeuille ne gère pas : irrécupérables."} : {d:-1,r:"Tout est bien arrivé. Tu as eu de la chance de ne pas te tromper de réseau."}},
+   {l:"Envoyer 5 $ de test d'abord", s:"frais en plus", f:()=>({d:-6,r:"Les 5 $ de test n'arrivent pas : le réseau choisi était le mauvais. Tu perds ces 5 $ et 1 $ de frais, tu corriges le réseau, et ton épargne arrive entière."})}]}}}
+]});
+
+SESSIONS.push({id:"s5", n:5, title:"Finance décentralisée (DeFi)", short:"DeFi",
+sim:{name:"Le Protocole", tag:"SIM", desc:"Emprunter sur Aave, échanger sur un DEX, fournir de la liquidité, survivre à un décrochage : six décisions DeFi avec de vrais chiffres."},
+notions:[
+ ["DeFi","Des services financiers ouverts, exécutés par des contrats intelligents sur des blockchains publiques","Prêter, emprunter, échanger sans banque"],
+ ["Pile DeFi","Règlement, actifs, protocole, application, agrégation","Le site d'Uniswap n'est que la couche application"],
+ ["Surcollatéralisation","Déposer plus que ce qu'on emprunte","Sans identité ni tribunal, seul le collatéral garantit le prêt"],
+ ["Liquidation","La vente automatique du collatéral quand sa valeur passe sous le seuil","Avec une pénalité pour l'emprunteur"],
+ ["Facteur de santé","L'indicateur Aave de la sécurité d'un prêt","Sous 1, la position est liquidable"],
+ ["aToken","Le reçu d'un dépôt sur Aave","Il permet de retirer les fonds et les intérêts"],
+ ["Prêt flash","Un prêt emprunté et remboursé dans la même transaction, sinon tout est annulé","0,05 % de frais sur Aave V3"],
+ ["Manipulation d'oracle","Fausser le marché que l'oracle lit pour lui faire rapporter un faux prix","Mango Markets, environ 114 M$"],
+ ["Attaque de gouvernance","Acheter temporairement assez de votes pour faire passer sa proposition","Beanstalk, 182 M$ via un prêt flash"],
+ ["AMM","Un teneur de marché automatisé qui cote un prix par formule","Uniswap"],
+ ["x · y = k","La formule qui garde constant le produit des deux réserves d'un pool","Le prix est le rapport des réserves"],
+ ["Glissement (slippage)","L'écart entre le prix affiché et le prix moyen obtenu","Plus fort sur un gros ordre ou un petit pool"],
+ ["Fournisseur de liquidité (LP)","Celui qui dépose une paire de jetons dans un pool contre une part des frais","Une position Uniswap v3 est un NFT"],
+ ["Perte impermanente","Le manque à gagner du LP par rapport à la simple détention","−5,7 % si le prix double ou est divisé par deux"],
+ ["Liquidité concentrée","Fournir de la liquidité sur une plage de prix choisie","Hors de la plage, plus aucun frais touché"],
+ ["Palier de frais","Le pourcentage prélevé sur chaque échange d'un pool","0,01 % pour une paire stable, jusqu'à 1 % pour l'exotique"],
+ ["Staking liquide","Staker ses jetons et recevoir un reçu échangeable","stETH chez Lido, sAVAX chez BENQI"],
+ ["Décrochage d'un stablecoin","Un stablecoin qui s'écarte de sa valeur cible","Mars 2023 : USDC vers 0,87 $, DAI vers 0,88 $"],
+ ["Composabilité","Les protocoles s'empilent : un choc se propage d'une brique à l'autre","DAI garanti à environ 36 % par de l'USDC"],
+ ["Arbitragiste","Celui qui profite des écarts de prix et les referme","Il rachète au pool le jeton devenu trop bon marché"]
+],
+vf:[
+ ["La DeFi cherche à supprimer la garde des actifs par un tiers.",true,"Et l'accès filtré par l'identité."],
+ ["Si le site d'Uniswap tombe, ses contrats ne fonctionnent plus.",false,"Le site n'est qu'une porte : les contrats restent utilisables."],
+ ["Les prêts DeFi sont surcollatéralisés car il n'y a ni score de crédit ni tribunal.",true,"Le collatéral est le seul mécanisme d'exécution."],
+ ["5 ETH à 3 000 $, 10 000 USDC empruntés, seuil 120 % : la liquidation commence à 2 400 $.",true,"12 000 $ de garantie ÷ 5 ETH = 2 400 $."],
+ ["Sur Aave, un facteur de santé sous 1 rend la position liquidable.",true,"Un robot vend alors une partie du collatéral, avec pénalité."],
+ ["Un prêt flash peut être remboursé le lendemain.",false,"Il doit être remboursé dans la même transaction, sinon tout est annulé."],
+ ["Chez Mango Markets, l'oracle a menti.",false,"L'oracle a fidèlement rapporté un prix gonflé : c'est le marché qui était manipulé."],
+ ["L'attaque de Beanstalk a utilisé un prêt flash pour acheter des votes.",true,"Environ 79 % des votes, et 182 M$ retirés."],
+ ["Un délai entre le vote et son exécution protège des attaques de gouvernance par prêt flash.",true,"Un prêt flash ne survit pas au-delà d'une transaction."],
+ ["Les carnets d'ordres sont idéaux sur Ethereum.",false,"Chaque ordre coûte du gas et se fait devancer : d'où les AMM."],
+ ["Dans un pool x · y = k, le prix est le rapport des deux réserves.",true,"Chaque échange déplace donc le prix."],
+ ["Plus le pool est profond, plus le glissement est fort.",false,"C'est l'inverse : un pool profond bouge moins."],
+ ["La perte impermanente vient de l'arbitrage quand le prix bouge.",true,"Le LP vend ses gagnants et achète ses perdants."],
+ ["Pour un pool 50/50, doubler le prix ou le diviser par deux donne la même perte impermanente.",true,"Environ −5,7 % dans les deux cas : c'est le multiple qui compte."],
+ ["Un pool USDC/USDT subit une forte perte impermanente.",false,"Le rapport de prix reste proche de 1 : très peu de perte."],
+ ["Sur Uniswap v3, hors de la plage choisie, la position touche plus de frais.",false,"Elle ne touche plus rien et ne contient presque plus qu'un jeton."],
+ ["Pour une paire de grands stablecoins, on choisit un palier de frais très bas.",true,"0,01 % ou 0,05 % : les traders attendent des frais minimes."],
+ ["L'aToken est le reçu de ton dépôt sur Aave.",true,"Il permet de récupérer tes fonds et les intérêts."],
+ ["En mars 2023, le DAI a décroché à cause de l'USDC bloqué chez SVB.",true,"Environ 36 % de sa garantie était de l'USDC."],
+ ["Un jeton de staking liquide garantit une sortie instantanée sans frais.",false,"La rédemption est lente ; la vente rapide dépend des acheteurs."],
+ ["La sortie de sAVAX par le protocole prend environ 15 jours puis 2 jours pour réclamer.",true,"La voie rapide est la vente sur le marché, au prix des acheteurs."],
+ ["Depuis 2024, les grands piratages visent surtout les clés et les personnes.",true,"Bybit a perdu environ 1,5 Md$ en 2025."],
+ ["Une étude de 17 pools Uniswap v3 montre que les LP ont gagné plus qu'en gardant leurs jetons.",false,"199,3 M$ de frais mais 260,1 M$ de perte impermanente : 60,8 M$ de moins."],
+ ["Un prêt flash qui ne peut pas être remboursé fait perdre l'argent du prêteur.",false,"La transaction entière est annulée : le prêteur ne risque rien."]
+],
+sc:[
+ {t:"L'emprunt sur Aave", c:"Surcollatéralisation et liquidation", q:"Tu déposes 5 ETH à 3 000 $ sur Aave pour emprunter des USDC.", facts:[["Collatéral","5 ETH = 15 000 $"],["Seuil de liquidation","120 %"]],
+  lesson:"Prix de liquidation = dette × seuil ÷ quantité de collatéral. Avec 10 000 USDC empruntés, la liquidation commence à 2 400 $ l'ETH, soit une baisse de 20 % seulement. Emprunter moins laisse de la marge.",
+  nodes:{a:{x:"Combien empruntes-tu ?", ch:[
+   {l:"10 000 USDC, le maximum raisonnable", s:"liquidation à 2 400 $", f:()=>({to:"b"})},
+   {l:"6 000 USDC", s:"liquidation à 1 440 $", f:()=>({d:15,r:"L'ETH chute à 2 250 $ la semaine suivante. Ton facteur de santé baisse, mais reste loin de 1 : tu gardes ta position et ton emprunt te rapporte 15 $."})}]},
+  b:{x:"Une semaine plus tard, l'ETH tombe à 2 250 $ (−25 %). Ta position est sous le seuil.", ch:[
+   {l:"Ne rien faire", f:()=>({d:-60,r:"Un robot liquide une partie de tes ETH pour rembourser le prêteur, avec une pénalité. Tu gardes tes USDC mais perds une bonne part de ta garantie."})},
+   {l:"Rembourser une partie de la dette", f:()=>({d:-10,r:"Tu remontes ton facteur de santé au-dessus de 1, juste à temps. Quelques frais, mais pas de liquidation."})}]}}},
+ {t:"La grosse vente", c:"AMM, x · y = k et glissement", q:"Tu dois vendre 10 ETH contre des USDC.", facts:[["Petit pool","100 ETH / 300 000 USDC"],["Prix affiché","3 000 $"]],
+  lesson:"Dans un pool x · y = k, chaque échange déplace le prix. Vendre 10 ETH dans un pool de 100 ETH rapporte en moyenne 2 727 $ par ETH, et le pool affiche ensuite 2 479 $. Un pool deux fois plus profond limite le glissement (environ 2 857 $).",
+  nodes:{a:{x:"Où vends-tu tes 10 ETH ?", ch:[
+   {l:"D'un coup, dans ce petit pool", f:()=>({d:-27,r:"Tu reçois 27 273 USDC au lieu de 30 000 : 9 % de glissement. Le pool affiche maintenant 2 479 $."})},
+   {l:"D'un coup, dans un pool deux fois plus profond", f:()=>({d:-14,r:"Tu reçois environ 28 571 USDC : le glissement tombe à moins de 5 %."})},
+   {l:"Via un agrégateur qui répartit l'ordre", f:()=>({d:-6,r:"L'ordre est découpé entre plusieurs pools profonds : environ 2 % de glissement seulement."})}]}}},
+ {t:"Le pool qui rapporte", c:"Perte impermanente", q:"Tu as 100 $ : moitié ETH, moitié USDC. Que fais-tu pendant un mois ?", facts:[["Frais du pool ETH/USDC","≈ 3 $ par mois"],["Frais du pool USDC/USDT","≈ 1 $ par mois"]],
+  lesson:"Quand le prix bouge, les arbitragistes rachètent au pool le jeton qui monte : le LP vend ses gagnants. Si l'ETH double, sa position vaut 2√2 × 50 ≈ 141 $ au lieu de 150 $ en simple détention, soit −5,7 %. Fournir de la liquidité ne paie que si les frais dépassent cette perte.",
+  nodes:{a:{x:"Pendant ce mois, l'ETH va doubler (tu ne le sais pas encore).", ch:[
+   {l:"Garder simplement mes jetons", f:()=>({d:50,r:"Tes 50 $ d'ETH valent 100 $ : ton capital passe de 100 à 150 $."})},
+   {l:"Fournir de la liquidité ETH/USDC", f:()=>({d:44,r:"Ta position vaut environ 141 $ plus 3 $ de frais. Tu gagnes 44 $, mais 6 de moins qu'en gardant tes jetons : c'est la perte impermanente."})},
+   {l:"Tout passer en USDC/USDT dans un pool stable", f:()=>({d:1,r:"Presque aucune perte impermanente, 1 $ de frais. Mais tu as raté la hausse de l'ETH."})}]}}},
+ {t:"Le prêt d'une transaction", c:"Prêt flash et arbitrage", q:"Un jeton vaut 1,00 $ sur un DEX et 1,02 $ sur un autre.", facts:[["Écart","2 %"],["Frais du prêt flash","0,05 %"]],
+  lesson:"Un prêt flash prête n'importe quel montant sans garantie, à condition d'être remboursé dans la même transaction. Si l'opération n'est pas rentable, tout est annulé et on ne perd que le gas. C'est un outil d'arbitrage, et parfois d'attaque.",
+  nodes:{a:{x:"Tu peux emprunter 100 000 USDC en prêt flash, acheter sur le premier DEX, revendre sur le second et rembourser, le tout en une transaction.", ch:[
+   {l:"Lancer l'arbitrage", f:()=> Math.random()<.7 ? {d:25,r:"L'écart tient le temps du bloc. Tu rembourses le prêt et ses 0,05 % de frais, et gardes le bénéfice. L'écart s'est refermé grâce à toi."} : {d:-2,r:"Un autre arbitragiste a refermé l'écart avant toi. Le remboursement est impossible, la transaction entière est annulée : tu ne perds que 2 $ de gas."}},
+   {l:"Passer", f:()=>({d:0,r:"Un autre arbitragiste prend l'écart quelques secondes plus tard."})}]}}},
+ {t:"Le week-end SVB", c:"Stablecoins et composabilité", q:"Mars 2023. La Silicon Valley Bank fait faillite. Ton épargne est en DAI.", facts:[["Prix du DAI","0,88 $"],["Garantie du DAI","≈ 36 % en USDC"]],
+  lesson:"Circle avait une partie des réserves de l'USDC chez SVB : l'USDC est tombé vers 0,87 $ et le DAI, garanti en partie par de l'USDC, l'a suivi. Une position DeFi n'est jamais plus sûre que tout ce qu'elle empile. Les deux sont revenus à 1 $ en quelques jours, une fois les dépôts garantis.",
+  nodes:{a:{x:"Ton épargne de 200 $ en DAI ne vaut plus que 176 $. Panique sur les réseaux.", ch:[
+   {l:"Tout vendre à 0,88 $", f:()=>({d:-24,r:"Tu encaisses la perte. Trois jours plus tard, le DAI est revenu à 1 $."})},
+   {l:"Attendre", f:()=>({d:0,r:"Le lundi, les autorités garantissent les dépôts de SVB : l'USDC puis le DAI reviennent à 1 $."})},
+   {l:"Acheter plus de DAI à 0,88 $", f:()=> Math.random()<.85 ? {d:24,r:"Le DAI revient à 1 $ : ton pari rapporte. Mais tu misais sur un sauvetage qui n'était pas garanti."} : {d:-40,r:"Dans ce scénario, les dépôts ne sont pas garantis et le DAI s'enfonce. Ton pari tourne mal."}}]}}},
+ {t:"Le loyer de jeudi", c:"Staking liquide et sortie", q:"Tes AVAX sont stakés via BENQI, en sAVAX. Tu as besoin de liquidités dans 2 jours.", facts:[["Rédemption protocole","15 j + 2 j"],["Vente sur le marché","≈ 1 % sous la valeur"]],
+  lesson:"Un jeton de staking liquide est une créance sur des jetons stakés, pas un ticket de sortie instantanée. La rédemption par le protocole est lente ; la vente sur le marché est rapide, mais au prix des acheteurs présents.",
+  nodes:{a:{x:"Comment récupères-tu tes fonds à temps ?", ch:[
+   {l:"Demander la rédemption au protocole", f:()=>({d:-30,r:"Il faut 15 jours d'attente puis 2 jours pour réclamer. Tu paies ton loyer en retard, avec pénalités."})},
+   {l:"Vendre le sAVAX sur le marché", f:()=>({d:-3,r:"Vendu en quelques secondes, environ 1 % sous sa valeur. Le loyer est payé à temps."})}]}}}
+]});
+
+SESSIONS.push({id:"s6", n:6, title:"Les marchés prédictifs", short:"Marchés prédictifs",
+sim:{name:"Le Parquet", tag:"TRADE", desc:"Six marchés, des contrats OUI et NON. Achète, revends, lis les règles, surveille l'oracle. Le hasard s'en mêle, comme en vrai."},
+notions:[
+ ["Marché prédictif","Un marché qui donne un prix à l'information sur un événement futur","« Arsenal gagnera-t-il la Ligue des champions ? »"],
+ ["Contrat binaire","OUI paie 1 $ si la condition est remplie, 0 sinon ; NON fait l'inverse","Une paire OUI + NON paie toujours 1 $"],
+ ["Probabilité implicite","Le prix du OUI lu comme une probabilité estimée par le marché","OUI à 0,72 $ ≈ 72 %"],
+ ["Sagesse des foules","La moyenne de nombreux avis indépendants bat souvent les experts isolés","Le bœuf de Galton : médiane à moins de 1 % du poids réel"],
+ ["Arbitrage","Un profit sans risque quand les prix sont incohérents","OUI + NON à 0,97 $ : acheter la paire rapporte 0,03 $"],
+ ["Couverture (hedging)","Utiliser un marché pour compenser une perte liée à un événement","Un festival achète des OUI « pluie » pour protéger sa recette"],
+ ["Spread","L'écart entre le meilleur prix de vente (ask) et le meilleur prix d'achat (bid)","Bid 17 ¢, ask 18 ¢ : spread de 1 ¢"],
+ ["Volume","Ce qui s'est échangé sur une période","Un pic signale souvent une nouvelle information"],
+ ["Intérêt ouvert","Les contrats encore en circulation, pas l'argent en jeu","S'il grimpe : de l'argent frais entre, parfois un seul gros trader"],
+ ["Carnet d'ordres (CLOB)","Acheteurs et vendeurs affichent leurs prix, les ordres se croisent en continu","Kalshi, et Polymarket (hors chaîne)"],
+ ["AMM","Une formule qui donne toujours un prix, même sans personne en face","Omen, Augur ; utile sur les marchés peu actifs"],
+ ["Risque de contrepartie","Devoir croire que la plateforme garde bien tes fonds","Retraits gelés, gagnants limités"],
+ ["Contrat intelligent","Un programme sur la blockchain qui garde les fonds et paie les gagnants","Il exécute ce que dit l'oracle, sans réfléchir"],
+ ["Stablecoin","Une crypto au prix stable, utilisée pour régler les marchés","L'USDC sur Polymarket"],
+ ["Oracle","Le pont qui dit à la blockchain ce qui s'est passé dans le monde réel","Oracle compromis = mauvais règlement"],
+ ["Oracle optimiste","Le résultat proposé est accepté, sauf contestation pendant un délai","UMA : après deux contestations, les détenteurs du jeton votent"],
+ ["Période de contestation","Le délai laissé à chacun pour corriger un résultat faux avant le paiement","Il faut que quelqu'un surveille"],
+ ["KYC","La vérification d'identité imposée par une plateforme régulée","Obligatoire sur Kalshi"],
+ ["Délit d'initié","Trader avec une information que le public n'a pas","Paris sur la capture de Maduro : 9 800 $ devenus 133 000 $"],
+ ["Sélection adverse","Les traders ordinaires fuient un marché où les initiés gagnent","Prix plus justes à court terme, marché moins précis à long terme"],
+ ["Attaque Sybil","Une seule personne cachée derrière de nombreux comptes","Facile quand créer un portefeuille est gratuit et anonyme"],
+ ["Réflexivité","La prédiction influence l'événement prédit","Un candidat à 80 % attire les donateurs"],
+ ["Aléa moral","Le marché paie quelqu'un qui peut provoquer le résultat","Le débat sur les marchés d'assassinats"],
+ ["Wash trading","S'échanger des contrats à soi-même pour gonfler le volume","Facilité par les comptes pseudonymes"]],
+vf:[
+ ["Un contrat OUI gagnant paie 1 $.",true,"OUI paie 1 $ si la condition est remplie, 0 $ sinon."],
+ ["Un OUI à 0,65 $ signifie que 65 % des gens ont voté oui.",false,"C'est une probabilité estimée par le marché (environ 65 %), pas un vote."],
+ ["On est obligé de garder son contrat jusqu'au résultat final.",false,"On peut revendre avant : acheté 0,30, revendu 0,50, c'est 0,20 $ de gain quel que soit le résultat."],
+ ["Une paire OUI + NON paie toujours 1 $.",true,"L'un des deux gagne forcément. C'est ce qui rend l'arbitrage possible."],
+ ["Le spread est l'écart entre le meilleur prix de vente et le meilleur prix d'achat.",true,"Spread = ask − bid."],
+ ["Un spread large signale un marché très liquide.",false,"C'est l'inverse : spread large = peu d'acteurs, prix moins fiable."],
+ ["L'intérêt ouvert mesure les contrats encore en circulation.",true,"À ne pas confondre avec le volume, qui mesure ce qui s'est échangé."],
+ ["Un sondage et un marché mesurent la même chose.",false,"Le sondage mesure une intention ; le marché, ce que les traders sont prêts à risquer."],
+ ["Sur un marché, les grosses mises pèsent plus sur le prix.",true,"Le marché pondère par l'argent. Mais l'argent n'est pas le savoir."],
+ ["Dans l'expérience de Galton, la foule s'est trompée de 30 % sur le poids du bœuf.",false,"La médiane des 800 estimations est tombée à moins de 1 % du poids réel."],
+ ["Un AMM donne toujours un prix, même sur un marché peu actif.",true,"Toujours un prix, pas toujours un bon prix."],
+ ["Kalshi est régulé par la CFTC et vérifie l'identité de ses utilisateurs.",true,"Bourse centralisée américaine, KYC obligatoire, paris en dollars."],
+ ["Polymarket utilise le dollar classique comme collatéral.",false,"Polymarket utilise l'USDC, un stablecoin. C'est Kalshi qui utilise le dollar."],
+ ["Chez Polymarket, le carnet d'ordres est sur la blockchain.",false,"Le carnet est hors chaîne (serveurs de Polymarket). Les fonds et le règlement sont on-chain."],
+ ["Une blockchain peut vérifier seule le résultat d'un match.",false,"Elle ne voit que ses propres données. Il lui faut un oracle."],
+ ["Avec un oracle optimiste, un résultat non contesté pendant le délai est validé.",true,"D'où l'importance que quelqu'un surveille."],
+ ["Avec UMA, après deux contestations, les détenteurs du jeton UMA votent.",true,"Ils ont le dernier mot : un système « ploutocratique »."],
+ ["Si l'oracle annonce un faux résultat non contesté, le contrat intelligent refuse de payer.",false,"Le contrat exécute ce que dit l'oracle : les mauvais gagnants sont payés, sans recours."],
+ ["On règle en stablecoins pour que le prix ne reflète que la probabilité.",true,"Avec de l'ETH, une baisse de la crypto pourrait effacer un gain « juste »."],
+ ["Le sport pèse environ 79 % du volume de Kalshi et Polymarket (juillet 2026).",true,"Les élections font parler, mais le sport domine."],
+ ["Chez un bookmaker, on parie contre d'autres joueurs.",false,"On parie contre le bookmaker, qui fixe les cotes avec sa marge. Sur un marché, on parie contre d'autres traders."],
+ ["Un marché prédictif gagne de l'argent quand ses utilisateurs perdent.",false,"Il vit des frais de transaction. C'est le bookmaker qui gagne quand tu perds."],
+ ["Une attaque Sybil, c'est une personne derrière de nombreux comptes.",true,"Créer un portefeuille est gratuit et anonyme."],
+ ["Le délit d'initié rend un marché plus précis à long terme.",false,"À court terme oui ; à long terme les traders ordinaires fuient et le marché se dégrade."],
+ ["Lors du piratage de Polymarket fin octobre 2026, des clés privées ont été volées.",false,"Aucune clé volée : un script tiers du site a utilisé les autorisations déjà données."],
+ ["La réflexivité, c'est quand la prédiction influence l'événement.",true,"Comme une panique bancaire : croire à la faillite la provoque."],
+ ["Aux États-Unis, la plupart des États veulent traiter ces marchés comme des jeux d'argent.",true,"La CFTC, elle, les voit comme des contrats dérivés. L'affaire devrait aller à la Cour suprême."],
+ ["Passer par un VPN pour contourner une restriction de pays est sans risque.",false,"Cela viole les conditions d'utilisation : bannissement ou perte des fonds possibles."],
+ ["Acheter un OUI à 0,40 $ et gagner rapporte 0,60 $ net par contrat.",true,"1 $ reçu − 0,40 $ payé = 0,60 $, soit +150 %."],
+ ["La vie d'un marché : création, négociation, résolution, règlement.",true,"L'oracle intervient à la résolution, après l'événement."],
+ ["Augur (2018) a été le premier marché décentralisé sur Ethereum.",true,"Polymarket est arrivé en 2020, Kalshi en 2021."],
+ ["Plus de 90 % du volume passe par des plateformes décentralisées.",false,"Plus de 90 % passe par des plateformes centralisées."],
+ ["Sur Polymarket, un ordre au marché est en fait un ordre limité exécuté tout de suite.",true,"Tous les ordres y sont techniquement des ordres à cours limité."],
+ ["L'arbitrage est un profit sans risque quand les prix sont incohérents.",true,"Exemple : OUI + NON à moins de 1 $."],
+ ["Un marché à faible volume donne un chiffre aussi fiable qu'un marché très actif.",false,"Peu de participants = estimation très imprécise."],
+ ["Se couvrir, c'est utiliser un marché pour compenser une perte liée à un événement.",true,"Le festival qui achète des OUI « pluie »."]],
+sc:[
+ {t:"Le festival sous les nuages", c:"Prix, probabilité et revente", q:"Pleuvra-t-il samedi sur le festival ?", m:[30,70],
+  lesson:"Le prix bouge avec les nouvelles. Revendre avant la fin verrouille un gain (ou limite une perte) quel que soit le résultat. Garder, c'est accepter le hasard : même à 0,55 $, le OUI perd encore 45 fois sur 100.",
+  nodes:{
+   a:{x:"Le ciel se couvre et tu as un avis sur la météo. Que fais-tu ?", ch:[
+     {l:"Acheter 100 OUI à 0,30 $", s:"coût 30 $", f:c=>{c.pos="oui";return{to:"b"}}},
+     {l:"Acheter 100 NON à 0,70 $", s:"coût 70 $", f:c=>{c.pos="non";return{to:"b"}}},
+     {l:"Passer mon tour", f:()=>({d:0,r:"Tu observes sans miser. Pendant ce temps, un flash météo fait passer le OUI de 0,30 à 0,55 $."})}]},
+   b:{m:[55,45], x:"Flash météo : un front orageux approche. Le OUI grimpe à 0,55 $, le NON tombe à 0,45 $.", ch:[
+     {l:"Revendre maintenant", f:c=> c.pos==="oui" ? {d:25,r:"Acheté 30 $, revendu 55 $. Gain verrouillé, qu'il pleuve ou non."} : {d:-25,r:"Acheté 70 $, revendu 45 $. Tu limites la casse : s'il pleut, tu aurais tout perdu."}},
+     {l:"Garder jusqu'à samedi", f:c=>{ const rain=rnd(.55);
+        if(c.pos==="oui") return rain ? {d:70,r:"Il pleut samedi. Tes 100 OUI paient 100 $."} : {d:-30,r:"Grand soleil samedi. Tes OUI valent 0 $."};
+        return rain ? {d:-70,r:"Il pleut samedi. Tes NON valent 0 $."} : {d:30,r:"Grand soleil samedi. Tes 100 NON paient 100 $."}; }}]}
+  }},
+ {t:"La paire à 97 centimes", c:"Arbitrage", q:"La banque centrale baissera-t-elle son taux jeudi ?", m:[45,52],
+  lesson:"Une paire OUI + NON paie toujours 1 $. Si elle coûte moins, l'acheter garantit un gain : c'est l'arbitrage. Dans la réalité, des robots ramassent ces écarts en quelques secondes, et un écart apparent cache souvent des frais ou des règles différentes.",
+  nodes:{
+   a:{x:"Regarde bien les deux prix. Quelque chose cloche.", ch:[
+     {l:"Acheter 100 OUI et 100 NON", s:"coût 97 $", f:()=>({d:3,r:"Quoi qu'il arrive, l'un des deux paie 100 $. Tu as payé 97 $ : 3 $ gagnés sans aucun risque."})},
+     {l:"Acheter 100 OUI seulement", s:"coût 45 $", f:()=> rnd(.46) ? {d:55,r:"Le taux baisse. Tes OUI paient 100 $. Mais tu as pris un risque alors qu'un gain garanti était sur la table."} : {d:-45,r:"Le taux ne bouge pas. Tes OUI valent 0 $. Il y avait pourtant un gain sans risque à prendre."}},
+     {l:"Passer mon tour", f:()=>({d:0,r:"Tu laisses passer 3 $ gratuits : 0,45 + 0,52 = 0,97 $ pour une paire qui paie toujours 1 $."})}]}
+  }},
+ {t:"Le marché désert", c:"Spread et liquidité", q:"Le maire de Petitbourg sera-t-il réélu ?", book:[20,40],
+  lesson:"Un spread large signale un marché peu liquide. Le chiffre affiché (30 %, le milieu) repose sur presque personne, et y entrer puis en sortir coûte cher. La profondeur dit combien d'échanges soutiennent un prix, pas si ce prix est juste.",
+  nodes:{
+   a:{x:"Trois traders en tout. Le meilleur acheteur propose 0,20 $, le meilleur vendeur demande 0,40 $.", ch:[
+     {l:"Acheter 100 OUI tout de suite", s:"au ask : 40 $", f:()=>({to:"b"})},
+     {l:"Placer un ordre d'achat à 0,30 $ et attendre", f:()=>({d:0,r:"Ton ordre attend dans le carnet. Personne ne veut vendre à ce prix. Rien ne se passe, et tu n'as rien perdu."})},
+     {l:"Passer : trop peu de monde", f:()=>({d:0,r:"Bon réflexe. Sur un marché aussi vide, le prix affiché ne veut pas dire grand-chose."})}]},
+   b:{x:"Dix minutes plus tard, tu doutes. Pour revendre, le seul acheteur propose toujours 0,20 $.", ch:[
+     {l:"Revendre à 0,20 $", f:()=>({d:-20,r:"Acheté 40 $, revendu 20 $. Tu as perdu 20 $ sans que rien n'ait changé : c'est le coût du spread."})},
+     {l:"Garder jusqu'à l'élection", f:()=> rnd(.3) ? {d:60,r:"Le maire est réélu. Tes OUI paient 100 $. Coup de chance : tu avais payé 0,40 $ une chose estimée à 30 %."} : {d:-40,r:"Le maire est battu. Tes OUI valent 0 $."}}]}
+  }},
+ {t:"Les petites lignes", c:"Les règles sont le contrat", q:"TechCorp vendra-t-elle ses bitcoins avant le 31 mai ?", m:[35,65],
+  lesson:"Histoire vraie : en mai 2026, sur un marché de plus de 60 M$ concernant MicroStrategy, la vente avait bien eu lieu mais n'était pas publique à la date limite. Deux contestations, puis vote des détenteurs UMA : NON. Le prix est une estimation, les règles sont le contrat.",
+  nodes:{
+   a:{x:"Nous sommes le 30 mai. Une rumeur sérieuse dit que la vente est déjà faite, mais rien d'officiel.", ch:[
+     {l:"Lire les règles du marché d'abord", s:"gratuit", f:()=>({to:"b"})},
+     {l:"Acheter 100 OUI à 0,35 $", s:"coût 35 $", f:()=>({d:-35,r:"La vente avait bien eu lieu, mais elle n'a été annoncée que le 1er juin. Selon les règles, le marché est résolu NON. Tu avais raison sur les faits, et tu perds quand même."})},
+     {l:"Passer mon tour", f:()=>({d:0,r:"Tu évites le piège. Le marché sera résolu NON : la vente n'a été rendue publique qu'après la date limite."})}]},
+   b:{x:"Règles : « OUI uniquement si la vente est annoncée publiquement avant le 31 mai. » Aucune annonce n'est prévue d'ici demain.", ch:[
+     {l:"Acheter 100 NON à 0,65 $", s:"coût 65 $", f:()=>({d:35,r:"Aucune annonce avant le 31. Résultat : NON. Tes 100 NON paient 100 $. Lire les règles t'a rapporté 35 $."})},
+     {l:"Acheter 100 OUI à 0,35 $ quand même", s:"coût 35 $", f:()=>({d:-35,r:"La vente n'est annoncée que le 1er juin. Résultat : NON. Les règles t'avaient prévenu."})},
+     {l:"Passer mon tour", f:()=>({d:0,r:"Prudent. Le marché est résolu NON, faute d'annonce publique à temps."})}]}
+  }},
+ {t:"Le compte mystère", c:"Délit d'initié", q:"Le président Ruiz quittera-t-il le pouvoir avant vendredi ?", m:[9,91],
+  lesson:"Quand des initiés tradent, le prix devient plus juste à court terme. Mais les traders ordinaires, qui perdent contre ceux qui savent déjà, finissent par partir : c'est la sélection adverse, et le marché se dégrade. Cas réel du cours : autour de la capture de Maduro, six portefeuilles ont transformé 9 800 $ en 133 000 $. Les premières poursuites pour délit d'initié ont commencé.",
+  nodes:{
+   a:{x:"Un portefeuille créé hier vient de miser 30 000 $ sur le OUI. Il ne parie que sur ce pays, et n'a jamais perdu.", ch:[
+     {l:"Le suivre : 200 OUI à 0,09 $", s:"coût 18 $", f:()=> rnd(.6) ? {d:182,r:"Ruiz est renversé jeudi. Tes 200 OUI paient 200 $. Tu as gagné en copiant quelqu'un qui savait sans doute déjà."} : {d:-18,r:"Rien ne se passe avant vendredi. Le compte mystère s'était trompé, ou cherchait à attirer des suiveurs."}},
+     {l:"Parier contre lui : 100 NON à 0,91 $", s:"coût 91 $", f:()=> rnd(.6) ? {d:-91,r:"Ruiz est renversé jeudi. Tes NON valent 0 $. Tu as parié contre quelqu'un qui connaissait probablement le résultat."} : {d:9,r:"Rien ne se passe. Tes NON paient 100 $, pour 9 $ de gain. Beaucoup de risque pour peu."}},
+     {l:"Passer : je ne joue pas contre un initié", f:()=>({d:0,r:"C'est exactement ce que font les traders ordinaires quand ils sentent les initiés. Et c'est ce qui vide un marché de sa liquidité."})}]}
+  }},
+ {t:"Le guetteur", c:"Oracle optimiste", q:"L'équipe bleue gagnera-t-elle la finale ?", m:[60,40],
+  lesson:"Avec un oracle optimiste (comme UMA sur Polymarket), un résultat proposé est validé si personne ne le conteste pendant le délai. Le système ne fonctionne que si quelqu'un surveille. Un résultat faux non contesté paie les mauvais gagnants, sans recours.",
+  nodes:{
+   a:{x:"On t'offre 100 OUI. L'équipe bleue gagne 2 à 1. Mais quelqu'un propose à l'oracle le résultat NON. Fenêtre de contestation : 2 heures.", ch:[
+     {l:"Contester en déposant une caution", s:"caution 30 $", f:()=>({d:110,r:"Ta contestation est validée : résultat OUI. Tu récupères ta caution, tu touches 10 $ de récompense, et tes 100 OUI paient 100 $."})},
+     {l:"Ne rien faire, quelqu'un s'en chargera", f:()=> rnd(.5) ? {d:100,r:"Un autre trader a contesté à ta place. Résultat corrigé : tes OUI paient 100 $. Tu as eu de la chance."} : {d:0,r:"Personne n'a contesté. Le résultat NON est validé et le contrat paie les détenteurs de NON. Tes OUI valent 0 $, sans recours."}}]}
+  }}]});
+
+SESSIONS.push({id:"s7", n:7, title:"La géopolitique des cryptomonnaies", short:"Géopolitique",
+sim:{name:"La Salle de crise", tag:"SIM", desc:"Épargnant sous sanctions, commerçant, analyste conformité, ingénieur IA : cinq situations où la crypto croise la géopolitique."},
+notions:[
+ ["Cryptoactif","Une crypto que l'on détient comme un lingot, pour sa valeur","Le bitcoin en réserve"],
+ ["Cryptomonnaie","Une crypto qui sert réellement à payer","Comme le dollar et Visa réunis"],
+ ["Vue emboîtée de la monnaie","Réserve de valeur, puis moyen d'échange, puis unité de compte au cœur","Bitcoin en est surtout à la première étape"],
+ ["Création monétaire privée","Les banques commerciales créent l'essentiel de la monnaie en prêtant","Les banques centrales en émettent souvent moins de 10 %"],
+ ["Volatilité selon Szabo","Elle reflète une incertitude réelle sur l'avenir, que la liquidité ne supprime pas","Bitcoin restera plus volatil qu'une monnaie centrale"],
+ ["L'œuf et la poule","Personne n'est payé en crypto, donc peu de commerçants l'acceptent","Le plus grand frein au moyen d'échange"],
+ ["Lignes de swap de la Fed","Les prêts de dollars de la Fed aux banques centrales étrangères en crise","2008 et 2020 : BCE, Banque du Japon"],
+ ["Concentration de la détention","Une monnaie doit circuler entre beaucoup de mains","État américain, Saylor, BlackRock, Satoshi ≈ 5 %"],
+ ["Risque quantique","L'or repose sur la physique, Bitcoin sur les mathématiques","Une cryptographie cassée serait fatale"],
+ ["Sex, Drugs and Bitcoin","L'étude estimant à 46 % la part des transactions bitcoin liées à l'illégal","Environ 76 Md$ par an, chiffres jusqu'à 2017"],
+ ["Coins for Bombs","Un volume anormal sur les exchanges non régulés et les mixeurs avant les attentats","Assez pour en prédire certains un jour avant"],
+ ["Digital Gold and geopolitics","Bitcoin et l'or montent quand le risque géopolitique est élevé","Mais l'effet dépend du type de risque"],
+ ["Flight to cryptos","Les sanctions européennes ralentissent le trading crypto sur les exchanges centralisés","L'étude ne couvre pas les DEX"],
+ ["Stablecoins as Digital Havens","Après l'invasion de l'Ukraine, les Russes accumulent de l'USDT et le retirent des exchanges","USDT a tenu son ancrage"],
+ ["Indice UCRY","Un indice d'incertitude crypto bâti sur 726,9 millions d'articles de presse","Deux volets : politique et prix"],
+ ["Distrust or speculation?","Les Américains achètent des cryptos surtout pour spéculer","Ils ne se méfient pas plus que la moyenne des banques"],
+ ["Hayek","Il imaginait des monnaies privées où la plus stable gagnerait","Or le leader, Bitcoin, gagne par sa rareté"],
+ ["Économie machine-à-machine","IA et robots ont besoin d'une monnaie numérique, programmable et sans gardien","Le moteur le plus prometteur selon Hileman"],
+ ["Wörgl","Une monnaie locale « fondante » autrichienne interdite en 1932","Elle perdait 1 % par mois pour pousser à dépenser"]
+],
+vf:[
+ ["Selon Hileman, une crypto pèserait le plus en géopolitique comme simple or numérique.",false,"C'est comme vraie monnaie, unité et réseau de paiement réunis, qu'elle pèserait vraiment."],
+ ["Les banques commerciales créent l'essentiel de la monnaie en accordant des prêts.",true,"Les banques centrales en émettent souvent moins de 10 %."],
+ ["Dans la vue emboîtée, l'unité de compte est au cœur, donc la plus difficile à atteindre.",true,"Bitcoin en est surtout à la réserve de valeur."],
+ ["Pour Nick Szabo, plus de liquidité supprimera la volatilité de Bitcoin.",false,"La volatilité vient de l'incertitude sur son avenir, que la liquidité ne supprime pas."],
+ ["Le manque de salaires en crypto est un frein majeur à son usage comme moyen d'échange.",true,"Sans salaires, pas de commerçants, et inversement."],
+ ["En avril 2025, Hileman s'inquiète de l'indépendance de la Fed et de ses lignes de swap.",true,"Un dollar transformé en arme pousse à chercher des alternatives."],
+ ["La concentration de la détention aide le bitcoin à devenir une monnaie.",false,"Une monnaie utile doit être largement répartie."],
+ ["« Sex, Drugs and Bitcoin » estimait qu'environ 46 % des transactions bitcoin étaient illégales.",true,"Sur une période allant jusqu'à 2017 ; la part a baissé depuis."],
+ ["L'adoption grand public fait monter la part illégale de l'activité bitcoin.",false,"Elle la fait baisser, comme l'arrivée de Monero ou Zcash."],
+ ["« Coins for Bombs » montre un volume anormal sur les exchanges régulés américains.",false,"Sur les exchanges non régulés et les services de mixage."],
+ ["Le registre public peut aider à détecter certains financements terroristes.",true,"Certains attentats étaient prévisibles un jour avant."],
+ ["L'or est protégé par la physique, Bitcoin par les mathématiques.",true,"D'où l'inquiétude face au risque quantique."],
+ ["Bitcoin et l'or réagissent de la même façon à tous les types de risque géopolitique.",false,"Ils montent en régime de risque élevé, mais l'effet dépend du type de risque."],
+ ["Quand l'UE inclut les services crypto dans ses sanctions, le trading ralentit sur les exchanges centralisés.",true,"Les sanctions mordent là où une plateforme garde les fonds."],
+ ["Après l'invasion de l'Ukraine, les Russes ont surtout fait du trading rapide d'USDT.",false,"Ils ont accumulé de l'USDT dans de petites adresses et l'ont retiré des exchanges."],
+ ["Environ 350 milliards de dollars d'actifs de la banque centrale russe ont été gelés.",true,"Environ 70 % de ses réserves, et des banques exclues de SWIFT."],
+ ["Hayek pensait que la monnaie privée la plus stable gagnerait.",true,"Or le leader, Bitcoin, est tout sauf stable."],
+ ["L'indice UCRY se construit à partir des prix des options.",false,"À partir de 726,9 millions d'articles de presse."],
+ ["L'incertitude bouge moins souvent que la volatilité mais dure plus longtemps.",true,"C'est ce que montre l'indice UCRY."],
+ ["Selon la BRI, les Américains achètent des cryptos surtout par méfiance envers les banques.",false,"Surtout par spéculation : ils ne sont pas plus méfiants que la moyenne."],
+ ["La plupart des monnaies alternatives meurent vite, rarement à cause des régulateurs.",true,"Bitcoin fait exception par sa durée."],
+ ["La monnaie de Wörgl a été interdite en 1932.",true,"Une monnaie « fondante » qui perdait 1 % par mois."],
+ ["Pour Hileman, l'économie machine-à-machine est un moteur prometteur pour faire du bitcoin une monnaie.",true,"Les IA et les robots ont besoin d'une monnaie sans gardien."],
+ ["Ce sont les États-Unis qui ont annoncé une réserve en bitcoin, alimentée par des saisies.",true,"Hileman pensait en 2016 que la Chine pourrait l'adopter la première."]
+],
+sc:[
+ {t:"L'épargne sous sanctions", c:"Stablecoins comme refuge", q:"Février 2022. Tu vis en Russie avec 200 $ d'épargne en roubles.", facts:[["Rouble","en chute libre"],["Banques","exclues de SWIFT"]],
+  lesson:"L'étude « Stablecoins as Digital Havens » observe qu'après l'invasion, les particuliers russes accumulent de l'USDT dans de petites adresses et le retirent des exchanges, par peur que les plateformes soient touchées par les sanctions. Les sanctions mordent là où une plateforme garde les fonds.",
+  nodes:{a:{x:"Le rouble s'effondre dans les jours qui suivent l'invasion. Que fais-tu de ton épargne ?", ch:[
+   {l:"La laisser en roubles à la banque", f:()=>({d:-60,r:"Le rouble perd une grande partie de sa valeur en quelques semaines, et les retraits en devises sont limités."})},
+   {l:"Acheter de l'USDT et le laisser sur l'exchange", f:()=> Math.random()<.4 ? {d:-200,r:"La plateforme bloque les comptes de ses clients russes pour se conformer aux sanctions. Tes USDT sont gelés."} : {d:0,r:"Tes USDT gardent leur valeur en dollars, mais tu dépends d'une plateforme qui peut geler ton compte à tout moment."}},
+   {l:"Acheter de l'USDT et le retirer dans mon portefeuille", f:()=>({d:0,r:"Ton épargne garde sa valeur en dollars, hors de portée d'une plateforme sanctionnée. C'est le comportement observé par l'étude."})}]}}},
+ {t:"La crise éclate", c:"Bitcoin, or et risque géopolitique", q:"Une crise géopolitique majeure éclate. Tu veux protéger 100 $.", facts:[["Or","valeur refuge établie"],["Bitcoin","volatil"]],
+  lesson:"D'après « Digital Gold and geopolitics », Bitcoin et l'or montent tous deux quand le risque géopolitique est élevé, mais l'effet dépend du type de risque. La volatilité et la spéculation empêchent encore Bitcoin d'être une valeur refuge établie.",
+  nodes:{a:{x:"Où places-tu tes 100 $ pour les semaines à venir ?", ch:[
+   {l:"En or", f:()=> Math.random()<.8 ? {d:8,r:"L'or joue son rôle de refuge : +8 %."} : {d:-3,r:"Ce type de crise ne profite pas à l'or : −3 %. L'effet dépend du type de risque."}},
+   {l:"En bitcoin", f:()=> Math.random()<.5 ? {d:25,r:"Le bitcoin bondit avec la crise : +25 %. Ça a payé, cette fois."} : {d:-20,r:"Le bitcoin chute avec les marchés à risque : −20 %. Il n'est pas encore une valeur refuge établie."}},
+   {l:"En euros sur mon compte", f:()=>({d:0,r:"Rien ne bouge à court terme. L'inflation grignote doucement."})}]}}},
+ {t:"La boutique 100 % bitcoin", c:"Moyen d'échange : l'œuf et la poule", q:"Tu ouvres une boutique de vêtements et tu crois au bitcoin.", facts:[["Clients payés en crypto","presque aucun"],["Clients payés en euros","presque tous"]],
+  lesson:"Pour Hileman, le plus grand frein à l'usage d'une crypto comme moyen d'échange est que presque personne n'est payé en crypto. Sans salaires en crypto, peu de commerçants l'acceptent, et inversement. Les stablecoins pourraient aider à débloquer ce cercle.",
+  nodes:{a:{x:"Quels moyens de paiement acceptes-tu ?", ch:[
+   {l:"Uniquement le bitcoin", f:()=>({d:-50,r:"Presque personne n'a de bitcoins à dépenser. Les clients repartent, la boutique végète."})},
+   {l:"Euros, bitcoin et stablecoins", f:()=>({d:30,r:"Tu gardes tous tes clients et attires en plus la petite communauté crypto du quartier."})},
+   {l:"Uniquement les euros", f:()=>({d:20,r:"Ça marche, comme toutes les boutiques. Tu passes juste à côté de quelques clients crypto."})}]}}},
+ {t:"L'alerte du mixeur", c:"Criminalité et transparence du registre", q:"Tu es analyste conformité dans une plateforme d'échange.", facts:[["Afflux venant d'un mixeur","+60 % en 48 h"],["Comptes concernés","créés récemment"]],
+  lesson:"« Coins for Bombs » observe un volume anormal sur les exchanges non régulés et les mixeurs avant de grands attentats. Le registre public, que les criminels utilisent, permet aussi de les repérer, parfois un jour avant.",
+  nodes:{a:{x:"Des fonds passés par un service de mixage arrivent en masse sur quelques comptes récents. Que fais-tu ?", ch:[
+   {l:"Bloquer les retraits et signaler aux autorités", f:()=>({d:30,r:"L'enquête remonte à un réseau de financement illicite. Ta plateforme est saluée par le régulateur."})},
+   {l:"Laisser passer, ce sont de bons clients", f:()=>({d:-100,r:"Les fonds servent à un financement illicite. Ta plateforme est sanctionnée pour défaut de vigilance."})}]}}},
+ {t:"L'agent qui paie", c:"Économie machine-à-machine", q:"Tu développes un agent IA qui loue de la puissance de calcul à la seconde.", facts:[["Paiements","des milliers par jour"],["Montant moyen","0,001 $"]],
+  lesson:"Une machine ne peut ni ouvrir un compte bancaire ni passer un contrôle de carte, et les frais bancaires écrasent les micropaiements. Pour Hileman, l'économie machine-à-machine est le moteur le plus prometteur pour faire d'une crypto une monnaie : programmable, native et sans gardien.",
+  nodes:{a:{x:"Comment ton agent paie-t-il ?", ch:[
+   {l:"Avec une carte bancaire", f:()=>({d:-40,r:"Les paiements de 0,001 $ coûtent chacun plus de frais que leur montant, et la banque bloque la carte pour activité suspecte."})},
+   {l:"Avec un portefeuille crypto (stablecoins ou Lightning)", f:()=>({d:40,r:"L'agent détient sa propre clé et paie chaque seconde de calcul pour quelques fractions de centime."})}]}}}
+]});
+
+
+SESSIONS.sort((a,b)=>a.n-b.n);
+
+let AC=null, SOUND=true;
+try{ SOUND = localStorage.getItem("arcade-son")!=="0"; }catch(e){}
+function beep(f,d,type,when){ if(!SOUND) return; try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const t=AC.currentTime+(when||0);
+  const o=AC.createOscillator(), g=AC.createGain(); o.type=type||"sine"; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02); }catch(e){} }
+const sGood=()=>{ beep(660,.12); beep(990,.16,"sine",.09); };
+const sBad =()=>{ beep(220,.25,"triangle"); };
+const sWin =()=>{ [523,659,784,1046].forEach((f,i)=>beep(f,.18,"sine",i*.11)); };
+
+const KEY="arcade-mooc-v1", app=document.getElementById("app");
+let S;
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S.best)); }catch(e){} }
+function shuffle(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const sgn = d => (d>0?"+":d<0?"−":"±")+Math.abs(d)+" $";
+const fmtT = t => { const s=Math.floor(t); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+const D = () => SESSIONS[S.s];
+const B = () => (S.best[D().id] = S.best[D().id] || {});
+
+function start(data){
+  S = Object.assign({view:"home", prev:"home", s:0, best:load(), vf:null, as:null, pq:null}, data && data.S ? data.S : {});
+  render();
+}
+function render(){
+  const inS = S.view!=="home";
+  document.getElementById("fbtn").hidden = !inS || S.view==="fiches";
+  document.getElementById("crumb").textContent = inS ? "← Session "+D().n+" · "+D().short : "Arcade · MOOC Blockchain";
+  document.getElementById("crumb").dataset.act = inS && S.view!=="hub" ? "hub" : "home";
+  document.getElementById("sbtn").textContent = "Son : "+(SOUND?"oui":"non");
+  ({home:vHome, hub:vHub, vf:vVF, vfEnd:vVFEnd, as:vAS, asEnd:vASEnd, pq:vPQ, pqEnd:vPQEnd, fiches:vFiches})[S.view]();
+}
+
+function vHome(){
+  app.innerHTML = `
+  <header class="stack"><h1>L'arcade du <span class="oui">MOOC</span> Blockchain</h1>
+  <p class="muted">Une arcade par session du cours : un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
+  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.pq,b.vf,b.as].filter(x=>x!=null).length;
+    return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
+    <span class="dots" aria-label="${done} jeu(x) sur 3 déjà joués">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span></button>`; }).join("")}</div>
+  <p class="muted small">Jeu pédagogique : argent fictif, aucun conseil en investissement. Tes records restent sur cet appareil.</p>`;
+}
+
+function vHub(){
+  const s=D(), b=B();
+  app.innerHTML = `
+  <header class="stack"><span class="eyebrow">Session ${s.n}</span><h1>${s.title}</h1></header>
+  <button class="game" data-act="pqStart"><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
+    <span class="rec">Record<b>${b.pq!=null? b.pq+" $":"—"}</b></span></button>
+  <button class="game" data-act="vfStart"><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Les séries de bonnes réponses multiplient les points.</span></span>
+    <span class="rec">Record<b>${b.vf!=null? b.vf+" pts":"—"}</b></span></button>
+  <button class="game" data-act="asStart"><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Une erreur coûte 5 secondes.</span></span>
+    <span class="rec">Record<b>${b.as!=null? fmtT(b.as):"—"}</b></span></button>
+  <button class="game" data-act="fiches"><span class="tag d">FICHES</span><span class="g"><b>Fiches de révision</b><span class="muted">Les ${s.notions.length} notions clés de la session, avec un exemple pour chacune.</span></span></button>`;
+}
+
+/* ---------- Vrai ou Faux ---------- */
+function vfStart(){ S.vf={deck:shuffle(D().vf.length), i:0, t:60, score:0, streak:0, ok:0, n:0, miss:[], wait:false, last:""}; S.view="vf"; }
+const mult = () => Math.min(4, 1+Math.floor(S.vf.streak/3));
+function vVF(){
+  const g=S.vf, st=D().vf[g.deck[g.i]];
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Temps <b id="vt">${Math.ceil(g.t)}</b> s</span><span>Score <b>${g.score}</b></span><span class="muted">Série <b>${g.streak}</b> · ×${mult()}</span></div>
+  <button class="link" data-act="hub">Quitter</button></div>
+  <div class="prog"><i id="vb" style="width:${g.t/60*100}%"></i></div>
+  <div class="card">${st[0]}</div>
+  ${g.wait ? `<div class="fb ko" role="status"><span class="res">Raté · c'était ${st[1]?"VRAI":"FAUX"}</span><span>${st[2]}</span></div>
+     <button class="btn" data-act="vfNext" id="go">Continuer</button><p class="muted small">Le chrono est en pause pendant que tu lis.</p>`
+   : `<div class="vf"><button class="f" data-act="vfAns" data-v="0">FAUX</button><button class="v" data-act="vfAns" data-v="1">VRAI</button></div>
+     <p class="muted small">${g.last || "Au clavier : flèche gauche pour FAUX, flèche droite pour VRAI."}</p>`}`;
+  if(g.wait) document.getElementById("go").focus({preventScroll:true});
+}
+function vfAns(v){
+  const g=S.vf, st=D().vf[g.deck[g.i]]; g.n++;
+  if(v===st[1]){ sGood(); const p=10*mult(); g.score+=p; g.streak++; g.ok++; g.last="Juste, +"+p+" points."; vfAdvance(); }
+  else { sBad(); g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
+}
+function vfAdvance(){ const g=S.vf; g.wait=false; g.i++; if(g.i>=g.deck.length) vfEnd(); }
+function vfEnd(){ sWin(); const g=S.vf, b=B(); g.rec = b.vf==null || g.score>b.vf; if(g.rec){ b.vf=g.score; save(); } S.view="vfEnd"; }
+function vVFEnd(){
+  const g=S.vf, V=D().vf;
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">Vrai ou Faux éclair · terminé</span>
+  <div class="row"><div><div class="big">${g.score}</div><span class="muted">points</span></div><div><div class="big">${g.ok} / ${g.n}</div><span class="muted">bonnes réponses</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+B().vf+" points."}</p>
+  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="vfStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
+  ${g.miss.length ? `<section class="panel"><h3>À revoir</h3>${g.miss.map(i=>`<div class="miss"><b>${V[i][0]}</b><span><span class="${V[i][1]?"oui":"non"}">${V[i][1]?"Vrai":"Faux"}.</span> ${V[i][2]}</span></div>`).join("")}</section>`:""}`;
+}
+
+/* ---------- Les Paires ---------- */
+function asStart(){ const N=D().notions.length, R=Math.min(3,Math.floor(N/5));
+  S.as={pool:shuffle(N).slice(0,R*5), R, r:0, t:0, err:0, sel:null, done:[], bad:null, ex:"", defs:[]}; asRound(); S.view="as"; }
+function asRound(){ const g=S.as, ids=g.pool.slice(g.r*5, g.r*5+5); g.terms=ids; g.defs=shuffle(5).map(k=>ids[k]); g.done=[]; g.sel=null; g.bad=null; }
+function vAS(){
+  const g=S.as, N=D().notions;
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Manche <b>${g.r+1}</b> / ${g.R}</span><span>Chrono <b id="at">${fmtT(g.t)}</b></span><span class="muted">Erreurs <b>${g.err}</b></span></div>
+  <button class="link" data-act="hub">Quitter</button></div>
+  <p class="muted small">Choisis un mot, puis touche sa définition.</p>
+  <div class="chips">${g.terms.map(i=>`<button class="chip" data-act="asTerm" data-i="${i}" aria-pressed="${g.sel===i}" ${g.done.includes(i)?"disabled":""}>${N[i][0]}</button>`).join("")}</div>
+  <div class="stack" style="gap:8px">${g.defs.map(i=> g.done.includes(i)
+     ? `<div class="def done"><b>${N[i][0]}</b> · ${N[i][1]}</div>`
+     : `<button class="def ${g.bad===i?"bad":""}" data-act="asDef" data-i="${i}">${N[i][1]}</button>`).join("")}</div>
+  <p class="small" role="status">${g.ex}</p>`;
+}
+function asDef(i){
+  const g=S.as, N=D().notions; g.bad=null;
+  if(g.sel==null){ g.ex="Choisis d'abord un mot dans la liste du haut."; return; }
+  if(g.sel===i){ sGood(); g.done.push(i); g.sel=null; g.ex="Juste. Exemple : "+N[i][2]+".";
+    if(g.done.length===5){ g.r++; if(g.r===g.R){ sWin(); const b=B(); g.rec = b.as==null || Math.round(g.t)<b.as; if(g.rec){ b.as=Math.round(g.t); save(); } S.view="asEnd"; } else asRound(); } }
+  else { sBad(); g.err++; g.t+=5; g.bad=i; g.ex="Ce n'est pas ça : 5 secondes de pénalité. Réessaie."; }
+}
+function vASEnd(){
+  const g=S.as, N=D().notions;
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">Les Paires · terminé</span>
+  <div class="row"><div><div class="big">${fmtT(g.t)}</div><span class="muted">temps final</span></div><div><div class="big">${g.err}</div><span class="muted">erreurs</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtT(B().as)+"."} Tu as révisé ${g.pool.length} notions sur ${N.length} : chaque partie en tire d'autres.</p>
+  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="asStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
+  <section class="panel"><h3>Les notions de cette partie</h3>${g.pool.map(i=>`<div class="miss"><b>${N[i][0]}</b><span>${N[i][1]}</span><span class="muted">${N[i][2]}</span></div>`).join("")}</section>`;
+}
+
+/* ---------- Simulateur ---------- */
+function pqStart(){ S.pq={cap:200, si:0, node:"a", ctx:{}, out:null, hist:[], bail:false}; S.view="pq"; }
+function panel(sc, nd){
+  if(sc.book) return `<div class="mkt"><div class="o">Meilleur acheteur (bid)<b>0,${sc.book[0]} $</b></div><div class="n">Meilleur vendeur (ask)<b>0,${sc.book[1]} $</b></div></div>`;
+  const m=nd.m||sc.m;
+  if(m) return `<div class="mkt"><div class="o">OUI<b>0,${String(m[0]).padStart(2,"0")} $</b></div><div class="n">NON<b>0,${String(m[1]).padStart(2,"0")} $</b></div></div>`;
+  if(sc.facts) return `<div class="mkt">${sc.facts.map(f=>`<div class="z">${f[0]}<b>${f[1]}</b></div>`).join("")}</div>`;
+  return "";
+}
+function vPQ(){
+  const g=S.pq, SC=D().sc, sc=SC[g.si], nd=sc.nodes[g.node];
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Situation <b>${g.si+1}</b> / ${SC.length}</span><span>Capital <b>${g.cap} $</b></span></div><button class="link" data-act="hub">Quitter</button></div>
+  <div class="prog"><i style="width:${(g.si+(g.out?1:0))/SC.length*100}%"></i></div>
+  <section class="panel"><span class="eyebrow">${sc.t}</span><h2>${sc.q}</h2>${panel(sc,nd)}
+  ${g.out ? `<div class="fb ${g.out.d>0?"ok":g.out.d<0?"ko":"ne"}" role="status"><span class="res">${sgn(g.out.d)}</span><span>${g.out.r}</span></div>
+      <div class="stack" style="gap:4px"><span class="eyebrow">À retenir · ${sc.c}</span><p>${sc.lesson}</p></div>
+      ${g.bail?`<p class="muted small">Ton capital est passé sous 100 $ : un sponsor te renfloue à 100 $ pour la suite.</p>`:""}
+      <button class="btn" data-act="pqNext" id="go">${g.si===SC.length-1?"Voir mon bilan":"Situation suivante"}</button>`
+   : `<p>${nd.x}</p><div class="stack" style="gap:8px">${nd.ch.map((c,k)=>`<button class="choice" data-act="pqPick" data-k="${k}">${c.l}${c.s?`<span>${c.s}</span>`:""}</button>`).join("")}</div>`}
+  </section>`;
+  if(g.out) document.getElementById("go").focus({preventScroll:true});
+}
+function pqPick(k){
+  const g=S.pq, SC=D().sc, sc=SC[g.si], res=sc.nodes[g.node].ch[k].f(g.ctx);
+  if(res.to){ g.node=res.to; return; }
+  g.out=res; (res.d>0?sGood:res.d<0?sBad:()=>{})(); g.cap+=res.d; g.hist.push(res.d); g.bail=false;
+  if(g.cap<100 && g.si<SC.length-1){ g.cap=100; g.bail=true; }
+}
+function pqNext(){
+  const g=S.pq, SC=D().sc;
+  if(g.si<SC.length-1){ g.si++; g.node="a"; g.ctx={}; g.out=null; g.bail=false; }
+  else { sWin(); const b=B(); g.rec = b.pq==null || g.cap>b.pq; if(g.rec){ b.pq=g.cap; save(); } S.view="pqEnd"; }
+}
+function vPQEnd(){
+  const g=S.pq, SC=D().sc, c=g.cap, rk = c>=400?"Expert de la session" : c>=280?"Fin analyste" : c>=200?"Joueur prudent" : "Apprenti";
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">${D().sim.name} · bilan</span>
+  <div class="row"><div><div class="big">${c} $</div><span class="muted">capital final (départ : 200 $)</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+B().pq+" $."} Certains résultats dépendent du hasard : rejoue, les situations ne tourneront pas pareil.</p>
+  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i]>0?"oui":g.hist[i]<0?"non":""}">${sgn(g.hist[i])}</b></div>`).join("")}
+  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="pqStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>`;
+}
+
+/* ---------- Fiches ---------- */
+function vFiches(){
+  const N=D().notions;
+  app.innerHTML = `
+  <div class="bar"><h2>Fiches · Session ${D().n}</h2><button class="btn" data-act="back">${S.prev==="hub"?"Retour":"Reprendre le jeu"}</button></div>
+  <input class="search" id="search" type="search" placeholder="Chercher un mot…" aria-label="Chercher dans les fiches">
+  <div class="stack" style="gap:8px" id="list">${N.map(n=>`<div class="fiche"><b>${n[0]}</b><span>${n[1]}.</span><span class="muted small">Exemple : ${n[2]}.</span></div>`).join("")}</div>`;
+  document.getElementById("search").addEventListener("input", e=>{
+    const q=e.target.value.toLowerCase();
+    document.querySelectorAll("#list .fiche").forEach(f=>{ f.hidden = !f.textContent.toLowerCase().includes(q); });
+  });
+}
+
+/* ---------- Événements ---------- */
+document.addEventListener("click", ev=>{
+  const b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
+  const a=b.dataset.act;
+  if(a==="home") S.view="home";
+  else if(a==="open"){ S.s=+b.dataset.i; S.view="hub"; }
+  else if(a==="hub") S.view="hub";
+  else if(a==="snd"){ SOUND=!SOUND; try{localStorage.setItem("arcade-son",SOUND?"1":"0")}catch(e){} }
+  else if(a==="fiches"){ S.prev=S.view; S.view="fiches"; }
+  else if(a==="back") S.view=S.prev;
+  else if(a==="vfStart") vfStart();
+  else if(a==="vfAns") vfAns(b.dataset.v==="1");
+  else if(a==="vfNext") vfAdvance();
+  else if(a==="asStart") asStart();
+  else if(a==="asTerm"){ S.as.sel=+b.dataset.i; S.as.bad=null; }
+  else if(a==="asDef") asDef(+b.dataset.i);
+  else if(a==="pqStart") pqStart();
+  else if(a==="pqPick") pqPick(+b.dataset.k);
+  else if(a==="pqNext") pqNext();
+  render();
+  if(/Start|home|open|hub|fiches|back|pqNext/.test(a)) window.scrollTo(0,0);
+});
+document.addEventListener("keydown", ev=>{
+  if(!S || S.view!=="vf" || S.vf.wait) return;
+  if(ev.key==="ArrowLeft"){ vfAns(false); render(); }
+  else if(ev.key==="ArrowRight"){ vfAns(true); render(); }
+});
+setInterval(()=>{
+  if(!S) return;
+  if(S.view==="vf" && !S.vf.wait){
+    S.vf.t-=.1;
+    if(S.vf.t<=0){ S.vf.t=0; vfEnd(); render(); return; }
+    const t=document.getElementById("vt"), bar=document.getElementById("vb");
+    if(t) t.textContent=Math.ceil(S.vf.t); if(bar) bar.style.width=(S.vf.t/60*100)+"%";
+  } else if(S.view==="as"){
+    S.as.t+=.1; const t=document.getElementById("at"); if(t) t.textContent=fmtT(S.as.t);
+  }
+},100);
+start({});
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+
+</body>
+</html>
