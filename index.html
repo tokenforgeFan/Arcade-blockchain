@@ -71,6 +71,7 @@ p{margin:0}
 .game{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
   padding:16px;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
 .game:hover{border-color:var(--accent);transform:translateY(-2px)}
+.game:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .game .g{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .game .g b{font-family:var(--display);font-size:1.2rem}
 .game .rec{flex:none;text-align:right;font-size:.82rem;color:var(--muted)}
@@ -784,17 +785,17 @@ function start(data){
 }
 function render(){
   const inS = S.view!=="home";
-  document.getElementById("fbtn").hidden = !inS || S.view==="fiches";
+  document.getElementById("fbtn").hidden = !inS || S.view==="fiches" || S.view==="cours" || S.view==="hub";
   document.getElementById("crumb").textContent = inS ? "← Session "+D().n+" · "+D().short : "Arcade · MOOC Blockchain";
   document.getElementById("crumb").dataset.act = inS && S.view!=="hub" ? "hub" : "home";
   document.getElementById("sbtn").textContent = "Son : "+(SOUND?"oui":"non");
-  ({home:vHome, hub:vHub, vf:vVF, vfEnd:vVFEnd, as:vAS, asEnd:vASEnd, pq:vPQ, pqEnd:vPQEnd, fiches:vFiches})[S.view]();
+  ({home:vHome, hub:vHub, vf:vVF, vfEnd:vVFEnd, as:vAS, asEnd:vASEnd, pq:vPQ, pqEnd:vPQEnd, fiches:vFiches, cours:vCours})[S.view]();
 }
 
 function vHome(){
   app.innerHTML = `
   <header class="stack"><h1>L'arcade du <span class="oui">MOOC</span> Blockchain</h1>
-  <p class="muted">Une arcade par session du cours : un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
+  <p class="muted">Une arcade par session : d'abord le cours, puis les tests — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
   <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.pq,b.vf,b.as].filter(x=>x!=null).length;
     return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
     <span class="dots" aria-label="${done} jeu(x) sur 3 déjà joués">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span></button>`; }).join("")}</div>
@@ -805,13 +806,15 @@ function vHub(){
   const s=D(), b=B();
   app.innerHTML = `
   <header class="stack"><span class="eyebrow">Session ${s.n}</span><h1>${s.title}</h1></header>
-  <button class="game" data-act="pqStart"><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
+  <button class="game" data-act="cours"><span class="tag d">1 · COURS</span><span class="g"><b>${b.cours?"Revoir le cours":"Commencer par le cours"}</b><span class="muted">Les ${s.notions.length} notions clés de la session, avec un exemple pour chacune. À lire avant les tests.</span></span><span class="rec">Statut<b>${b.cours?"Lu":"À lire"}</b></span></button>
+  <p class="eyebrow" style="margin-top:8px">2 · Tests ${b.cours?"":"(verrouillés tant que le cours n'est pas lu)"} · chaque mauvaise réponse te pénalise</p>
+  <button class="game" data-act="pqStart" ${b.cours?"":"disabled"}><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
     <span class="rec">Record<b>${b.pq!=null? b.pq+" $":"—"}</b></span></button>
-  <button class="game" data-act="vfStart"><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Les séries de bonnes réponses multiplient les points.</span></span>
+  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Bonne réponse +10 (×série), mauvaise réponse −5 points.</span></span>
     <span class="rec">Record<b>${b.vf!=null? b.vf+" pts":"—"}</b></span></button>
-  <button class="game" data-act="asStart"><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Une erreur coûte 5 secondes.</span></span>
+  <button class="game" data-act="asStart" ${b.cours?"":"disabled"}><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Une erreur coûte 5 secondes.</span></span>
     <span class="rec">Record<b>${b.as!=null? fmtT(b.as):"—"}</b></span></button>
-  <button class="game" data-act="fiches"><span class="tag d">FICHES</span><span class="g"><b>Fiches de révision</b><span class="muted">Les ${s.notions.length} notions clés de la session, avec un exemple pour chacune.</span></span></button>`;
+`;
 }
 
 /* ---------- Vrai ou Faux ---------- */
@@ -824,7 +827,7 @@ function vVF(){
   <button class="link" data-act="hub">Quitter</button></div>
   <div class="prog"><i id="vb" style="width:${g.t/60*100}%"></i></div>
   <div class="card">${st[0]}</div>
-  ${g.wait ? `<div class="fb ko" role="status"><span class="res">Raté · c'était ${st[1]?"VRAI":"FAUX"}</span><span>${st[2]}</span></div>
+  ${g.wait ? `<div class="fb ko" role="status"><span class="res">Raté (−5 points) · c'était ${st[1]?"VRAI":"FAUX"}</span><span>${st[2]}</span></div>
      <button class="btn" data-act="vfNext" id="go">Continuer</button><p class="muted small">Le chrono est en pause pendant que tu lis.</p>`
    : `<div class="vf"><button class="f" data-act="vfAns" data-v="0">FAUX</button><button class="v" data-act="vfAns" data-v="1">VRAI</button></div>
      <p class="muted small">${g.last || "Au clavier : flèche gauche pour FAUX, flèche droite pour VRAI."}</p>`}`;
@@ -833,7 +836,7 @@ function vVF(){
 function vfAns(v){
   const g=S.vf, st=D().vf[g.deck[g.i]]; g.n++;
   if(v===st[1]){ sGood(); const p=10*mult(); g.score+=p; g.streak++; g.ok++; g.last="Juste, +"+p+" points."; vfAdvance(); }
-  else { sBad(); g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
+  else { sBad(); g.score-=5; g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
 }
 function vfAdvance(){ const g=S.vf; g.wait=false; g.i++; if(g.i>=g.deck.length) vfEnd(); }
 function vfEnd(){ sWin(); const g=S.vf, b=B(); g.rec = b.vf==null || g.score>b.vf; if(g.rec){ b.vf=g.score; save(); } S.view="vfEnd"; }
@@ -924,6 +927,15 @@ function vPQEnd(){
   <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="pqStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>`;
 }
 
+/* ---------- Cours ---------- */
+function vCours(){
+  const s=D(), N=s.notions;
+  app.innerHTML = `
+  <header class="stack"><span class="eyebrow">Session ${s.n} · Cours</span><h1>${s.title}</h1>
+  <p class="muted">Lis chaque notion et son exemple. Ensuite, passe aux tests : chaque mauvaise réponse te coûte des points, du temps ou de l'argent fictif.</p></header>
+  <div class="stack" style="gap:8px">${N.map((n,k)=>`<div class="fiche"><span class="muted small">Notion ${k+1} / ${N.length}</span><b>${n[0]}</b><span>${n[1]}.</span><span class="muted small">Exemple : ${n[2]}.</span></div>`).join("")}</div>
+  <button class="btn" data-act="coursDone">J'ai appris le cours, passer aux tests →</button>`;
+}
 /* ---------- Fiches ---------- */
 function vFiches(){
   const N=D().notions;
@@ -947,6 +959,8 @@ document.addEventListener("click", ev=>{
   else if(a==="snd"){ SOUND=!SOUND; try{localStorage.setItem("arcade-son",SOUND?"1":"0")}catch(e){} }
   else if(a==="fiches"){ S.prev=S.view; S.view="fiches"; }
   else if(a==="back") S.view=S.prev;
+  else if(a==="cours") S.view="cours";
+  else if(a==="coursDone"){ B().cours=true; save(); S.view="hub"; }
   else if(a==="vfStart") vfStart();
   else if(a==="vfAns") vfAns(b.dataset.v==="1");
   else if(a==="vfNext") vfAdvance();
@@ -957,7 +971,7 @@ document.addEventListener("click", ev=>{
   else if(a==="pqPick") pqPick(+b.dataset.k);
   else if(a==="pqNext") pqNext();
   render();
-  if(/Start|home|open|hub|fiches|back|pqNext/.test(a)) window.scrollTo(0,0);
+  if(/Start|home|open|hub|fiches|back|pqNext|cours/.test(a)) window.scrollTo(0,0);
 });
 document.addEventListener("keydown", ev=>{
   if(!S || S.view!=="vf" || S.vf.wait) return;
