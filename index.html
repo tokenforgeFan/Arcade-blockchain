@@ -197,7 +197,7 @@ sc:[
    {l:"Installer, ça se ressemble", f:()=>({d:-150,r:"Une seule différence suffit : le fichier a été modifié. C'était une version piégée qui a vidé ton portefeuille."})},
    {l:"Comparer caractère par caractère", f:()=>({to:"b"})}]},
   b:{x:"Un caractère diffère. Que fais-tu ?", ch:[
-   {l:"Supprimer et télécharger sur le site officiel", f:()=>({d:0,r:"Bonne décision. Le nouveau fichier a exactement la bonne empreinte : rien de perdu."})},
+   {l:"Supprimer et télécharger sur le site officiel", f:()=>({d:0,ok:1,r:"Bonne décision. Le nouveau fichier a exactement la bonne empreinte : rien de perdu."})},
    {l:"Installer quand même, un seul caractère c'est rien", f:()=>({d:-150,r:"Effet avalanche : un fichier authentique aurait donné exactement la même empreinte. Celui-ci était piégé."})}]}}},
  {t:"Le paiement entre amis", c:"Clé privée et clé publique", q:"Un ami veut te rembourser 50 $ en crypto.", facts:[["À recevoir","50 $"],["Ton épargne","200 $"]],
   lesson:"Pour recevoir, on donne son adresse, qui dérive de la clé publique. La clé privée (ou la phrase de récupération) permet de dépenser : la donner, c'est donner tout le portefeuille.",
@@ -373,10 +373,10 @@ sc:[
   nodes:{a:{x:"Tu peux y placer 100 $.", ch:[
    {l:"Placer 100 $", f:()=> Math.random()<.6 ? {d:-100,r:"Un attaquant exploite une faille de réentrance et vide le contrat. Personne ne peut annuler."} : {d:50,r:"Pas de piratage cette fois. Tu gagnes 50 $, avec un risque énorme."}},
    {l:"Lire d'abord le rapport d'audit", f:()=>({to:"b"})},
-   {l:"Passer", f:()=>({d:0,r:"Tu gardes ton capital. Trois semaines plus tard, la DAO est vidée par une faille."})}]},
+   {l:"Passer", f:()=>({d:0,ok:1,r:"Tu gardes ton capital. Trois semaines plus tard, la DAO est vidée par une faille."})}]},
   b:{x:"Il n'existe aucun audit. Le code est publié depuis quatre jours.", ch:[
    {l:"Placer quand même", f:()=> Math.random()<.6 ? {d:-100,r:"Le contrat est vidé par une faille. Tu avais l'information et tu as pris le risque."} : {d:50,r:"Tu gagnes 50 $. Le risque était pourtant visible."}},
-   {l:"Passer", f:()=>({d:0,r:"Bonne lecture. Trois semaines plus tard, la DAO est vidée par une faille."})}]}}}
+   {l:"Passer", f:()=>({d:0,ok:1,r:"Bonne lecture. Trois semaines plus tard, la DAO est vidée par une faille."})}]}}}
 ]});
 
 SESSIONS.push({id:"s4", n:4, title:"Sécurité et confidentialité des portefeuilles", short:"Sécurité des portefeuilles",
@@ -433,7 +433,7 @@ sc:[
   nodes:{a:{x:"Le message, très officiel, demande de saisir tes 24 mots sur un site pour éviter le blocage.", ch:[
    {l:"Saisir mes 24 mots", f:()=>({d:-200,r:"Le site était un faux. En quelques minutes, ton portefeuille est vidé."})},
    {l:"Ne donner que 12 mots, par prudence", f:()=>({d:-200,r:"Avec la moitié de la phrase, l'attaquant a assez d'avance pour trouver le reste par calcul. Tout est vidé."})},
-   {l:"Ignorer et signaler le message", f:()=>({d:0,r:"Bon réflexe. Ton portefeuille n'avait aucun problème."})}]}}},
+   {l:"Ignorer et signaler le message", f:()=>({d:0,ok:1,r:"Bon réflexe. Ton portefeuille n'avait aucun problème."})}]}}},
  {t:"La bonne affaire", c:"Provenance du matériel", q:"Tu achètes un portefeuille matériel en ligne, 40 % moins cher que chez le fabricant.", facts:[["Prix fabricant","100 $"],["Prix annonce","60 $"]],
   lesson:"La phrase doit toujours être générée par l'appareil, devant toi. Un appareil d'occasion ou une boîte contenant déjà une phrase imprimée signale une attaque : quelqu'un d'autre connaît la clé.",
   nodes:{a:{x:"Le colis arrive. Dans la boîte, une carte avec 24 mots déjà imprimés : « votre phrase de récupération ».", ch:[
@@ -443,18 +443,18 @@ sc:[
   lesson:"L'attaquant envoie une transaction minuscule depuis une adresse qui imite le début et la fin de la tienne, pour qu'elle apparaisse dans ton historique. Seule une vérification de l'adresse entière, sur l'écran du portefeuille matériel, protège.",
   nodes:{a:{x:"Ton historique montre une adresse qui commence et finit comme la tienne. Elle vient d'apparaître après un dépôt de 0,0001 $.", ch:[
    {l:"Copier l'adresse de l'historique", f:()=>({d:-150,r:"C'était l'adresse de l'attaquant : même début, même fin, milieu différent. Les fonds sont partis."})},
-   {l:"Vérifier l'adresse entière sur l'écran de l'appareil", f:()=>({d:0,r:"Le milieu ne correspond pas. Tu reprends ta vraie adresse depuis ton appareil : fonds en sécurité."})}]}}},
+   {l:"Vérifier l'adresse entière sur l'écran de l'appareil", f:()=>({d:0,ok:1,r:"Le milieu ne correspond pas. Tu reprends ta vraie adresse depuis ton appareil : fonds en sécurité."})}]}}},
  {t:"Le mint gratuit", c:"Autorisations et drainers", q:"Un site propose un NFT gratuit. Il te demande de signer.", facts:[["NFT","gratuit"],["Autorisation demandée","illimitée sur tes USDC"]],
   lesson:"Une signature n'est pas anodine : une autorisation illimitée permet au contrat de retirer tes jetons plus tard, sans nouvelle demande. Lis ce que tu signes et révoque régulièrement les autorisations inutiles.",
   nodes:{a:{x:"Ton portefeuille affiche : « Autoriser ce contrat à dépenser un montant illimité de vos USDC ».", ch:[
    {l:"Signer, c'est juste un NFT gratuit", f:()=>({d:-150,r:"Le contrat était un drainer. Une heure plus tard, tous tes USDC sont retirés."})},
-   {l:"Refuser et quitter le site", f:()=>({d:0,r:"Un NFT gratuit n'a aucune raison de toucher à tes USDC. Bien vu."})}]}}},
+   {l:"Refuser et quitter le site", f:()=>({d:0,ok:1,r:"Un NFT gratuit n'a aucune raison de toucher à tes USDC. Bien vu."})}]}}},
  {t:"Le 25e mot", c:"Passphrase", q:"Tu ajoutes une passphrase pour protéger ton épargne contre le vol de ta phrase.", facts:[["Phrase","24 mots sur plaque métal"],["Passphrase","à sauvegarder"]],
   lesson:"La passphrase protège contre quelqu'un qui trouverait tes 24 mots, mais elle n'est stockée nulle part. Elle se sauvegarde sur un autre support, rangé ailleurs. L'oublier, c'est perdre les fonds ; la ranger avec la phrase, c'est l'annuler.",
   nodes:{a:{x:"Où gardes-tu ta passphrase ?", ch:[
    {l:"Dans ma tête uniquement", f:()=>({d:-200,r:"Deux ans plus tard, tu hésites entre trois variantes, majuscules comprises. Aucune n'ouvre le bon portefeuille : fonds perdus."})},
    {l:"Sur la même plaque que les 24 mots", f:()=> Math.random()<.3 ? {d:-200,r:"Un cambrioleur emporte la plaque. Avec la phrase et la passphrase ensemble, il a tout."} : {d:0,r:"Rien ne s'est passé, mais la passphrase ne protégeait plus rien en étant rangée avec la phrase."}},
-   {l:"Sur un autre support, dans un autre lieu", f:()=>({d:0,r:"Un voleur qui trouve l'un n'a pas l'autre, et toi tu peux toujours tout récupérer."})}]}}},
+   {l:"Sur un autre support, dans un autre lieu", f:()=>({d:0,ok:1,r:"Un voleur qui trouve l'un n'a pas l'autre, et toi tu peux toujours tout récupérer."})}]}}},
  {t:"Le gros virement", c:"Transaction de test", q:"Tu transfères toute ton épargne vers ton nouveau portefeuille froid.", facts:[["Montant","200 $"],["Réseau choisi","à vérifier"]],
   lesson:"Une erreur de réseau ou d'adresse est irréversible. Un petit envoi de test, vérifié à l'arrivée, coûte quelques frais et évite de tout perdre.",
   nodes:{a:{x:"Tu as recopié l'adresse et choisi un réseau dans la liste de la plateforme.", ch:[
@@ -542,7 +542,7 @@ sc:[
   lesson:"Circle avait une partie des réserves de l'USDC chez SVB : l'USDC est tombé vers 0,87 $ et le DAI, garanti en partie par de l'USDC, l'a suivi. Une position DeFi n'est jamais plus sûre que tout ce qu'elle empile. Les deux sont revenus à 1 $ en quelques jours, une fois les dépôts garantis.",
   nodes:{a:{x:"Ton épargne de 200 $ en DAI ne vaut plus que 176 $. Panique sur les réseaux.", ch:[
    {l:"Tout vendre à 0,88 $", f:()=>({d:-24,r:"Tu encaisses la perte. Trois jours plus tard, le DAI est revenu à 1 $."})},
-   {l:"Attendre", f:()=>({d:0,r:"Le lundi, les autorités garantissent les dépôts de SVB : l'USDC puis le DAI reviennent à 1 $."})},
+   {l:"Attendre", f:()=>({d:0,ok:1,r:"Le lundi, les autorités garantissent les dépôts de SVB : l'USDC puis le DAI reviennent à 1 $."})},
    {l:"Acheter plus de DAI à 0,88 $", f:()=> Math.random()<.85 ? {d:24,r:"Le DAI revient à 1 $ : ton pari rapporte. Mais tu misais sur un sauvetage qui n'était pas garanti."} : {d:-40,r:"Dans ce scénario, les dépôts ne sont pas garantis et le DAI s'enfonce. Ton pari tourne mal."}}]}}},
  {t:"Le loyer de jeudi", c:"Staking liquide et sortie", q:"Tes AVAX sont stakés via BENQI, en sAVAX. Tu as besoin de liquidités dans 2 jours.", facts:[["Rédemption protocole","15 j + 2 j"],["Vente sur le marché","≈ 1 % sous la valeur"]],
   lesson:"Un jeton de staking liquide est une créance sur des jetons stakés, pas un ticket de sortie instantanée. La rédemption par le protocole est lente ; la vente sur le marché est rapide, mais au prix des acheteurs présents.",
@@ -643,7 +643,7 @@ sc:[
    a:{x:"Trois traders en tout. Le meilleur acheteur propose 0,20 $, le meilleur vendeur demande 0,40 $.", ch:[
      {l:"Acheter 100 OUI tout de suite", s:"au ask : 40 $", f:()=>({to:"b"})},
      {l:"Placer un ordre d'achat à 0,30 $ et attendre", f:()=>({d:0,r:"Ton ordre attend dans le carnet. Personne ne veut vendre à ce prix. Rien ne se passe, et tu n'as rien perdu."})},
-     {l:"Passer : trop peu de monde", f:()=>({d:0,r:"Bon réflexe. Sur un marché aussi vide, le prix affiché ne veut pas dire grand-chose."})}]},
+     {l:"Passer : trop peu de monde", f:()=>({d:0,ok:1,r:"Bon réflexe. Sur un marché aussi vide, le prix affiché ne veut pas dire grand-chose."})}]},
    b:{x:"Dix minutes plus tard, tu doutes. Pour revendre, le seul acheteur propose toujours 0,20 $.", ch:[
      {l:"Revendre à 0,20 $", f:()=>({d:-20,r:"Acheté 40 $, revendu 20 $. Tu as perdu 20 $ sans que rien n'ait changé : c'est le coût du spread."})},
      {l:"Garder jusqu'à l'élection", f:()=> rnd(.3) ? {d:60,r:"Le maire est réélu. Tes OUI paient 100 $. Coup de chance : tu avais payé 0,40 $ une chose estimée à 30 %."} : {d:-40,r:"Le maire est battu. Tes OUI valent 0 $."}}]}
@@ -654,11 +654,11 @@ sc:[
    a:{x:"Nous sommes le 30 mai. Une rumeur sérieuse dit que la vente est déjà faite, mais rien d'officiel.", ch:[
      {l:"Lire les règles du marché d'abord", s:"gratuit", f:()=>({to:"b"})},
      {l:"Acheter 100 OUI à 0,35 $", s:"coût 35 $", f:()=>({d:-35,r:"La vente avait bien eu lieu, mais elle n'a été annoncée que le 1er juin. Selon les règles, le marché est résolu NON. Tu avais raison sur les faits, et tu perds quand même."})},
-     {l:"Passer mon tour", f:()=>({d:0,r:"Tu évites le piège. Le marché sera résolu NON : la vente n'a été rendue publique qu'après la date limite."})}]},
+     {l:"Passer mon tour", f:()=>({d:0,ok:1,r:"Tu évites le piège. Le marché sera résolu NON : la vente n'a été rendue publique qu'après la date limite."})}]},
    b:{x:"Règles : « OUI uniquement si la vente est annoncée publiquement avant le 31 mai. » Aucune annonce n'est prévue d'ici demain.", ch:[
      {l:"Acheter 100 NON à 0,65 $", s:"coût 65 $", f:()=>({d:35,r:"Aucune annonce avant le 31. Résultat : NON. Tes 100 NON paient 100 $. Lire les règles t'a rapporté 35 $."})},
      {l:"Acheter 100 OUI à 0,35 $ quand même", s:"coût 35 $", f:()=>({d:-35,r:"La vente n'est annoncée que le 1er juin. Résultat : NON. Les règles t'avaient prévenu."})},
-     {l:"Passer mon tour", f:()=>({d:0,r:"Prudent. Le marché est résolu NON, faute d'annonce publique à temps."})}]}
+     {l:"Passer mon tour", f:()=>({d:0,ok:1,r:"Prudent. Le marché est résolu NON, faute d'annonce publique à temps."})}]}
   }},
  {t:"Le compte mystère", c:"Délit d'initié", q:"Le président Ruiz quittera-t-il le pouvoir avant vendredi ?", m:[9,91],
   lesson:"Quand des initiés tradent, le prix devient plus juste à court terme. Mais les traders ordinaires, qui perdent contre ceux qui savent déjà, finissent par partir : c'est la sélection adverse, et le marché se dégrade. Cas réel du cours : autour de la capture de Maduro, six portefeuilles ont transformé 9 800 $ en 133 000 $. Les premières poursuites pour délit d'initié ont commencé.",
@@ -731,7 +731,7 @@ sc:[
   nodes:{a:{x:"Le rouble s'effondre dans les jours qui suivent l'invasion. Que fais-tu de ton épargne ?", ch:[
    {l:"La laisser en roubles à la banque", f:()=>({d:-60,r:"Le rouble perd une grande partie de sa valeur en quelques semaines, et les retraits en devises sont limités."})},
    {l:"Acheter de l'USDT et le laisser sur l'exchange", f:()=> Math.random()<.4 ? {d:-200,r:"La plateforme bloque les comptes de ses clients russes pour se conformer aux sanctions. Tes USDT sont gelés."} : {d:0,r:"Tes USDT gardent leur valeur en dollars, mais tu dépends d'une plateforme qui peut geler ton compte à tout moment."}},
-   {l:"Acheter de l'USDT et le retirer dans mon portefeuille", f:()=>({d:0,r:"Ton épargne garde sa valeur en dollars, hors de portée d'une plateforme sanctionnée. C'est le comportement observé par l'étude."})}]}}},
+   {l:"Acheter de l'USDT et le retirer dans mon portefeuille", f:()=>({d:0,ok:1,r:"Ton épargne garde sa valeur en dollars, hors de portée d'une plateforme sanctionnée. C'est le comportement observé par l'étude."})}]}}},
  {t:"La crise éclate", c:"Bitcoin, or et risque géopolitique", q:"Une crise géopolitique majeure éclate. Tu veux protéger 100 $.", facts:[["Or","valeur refuge établie"],["Bitcoin","volatil"]],
   lesson:"D'après « Digital Gold and geopolitics », Bitcoin et l'or montent tous deux quand le risque géopolitique est élevé, mais l'effet dépend du type de risque. La volatilité et la spéculation empêchent encore Bitcoin d'être une valeur refuge établie.",
   nodes:{a:{x:"Où places-tu tes 100 $ pour les semaines à venir ?", ch:[
@@ -993,7 +993,7 @@ function vPQ(){
 function pqPick(k){
   const g=S.pq, SC=D().sc, sc=SC[g.si], res=sc.nodes[g.node].ch[k].f(g.ctx);
   if(res.to){ g.node=res.to; return; }
-  g.out=res; (res.d>0?sGood:res.d<0?sBad:()=>{})(); g.cap+=res.d; g.hist.push(res.d); g.bail=false;
+  g.out=res; (res.ok||res.d>0?sGood:res.d<0?sBad:()=>{})(); g.cap+=res.d; g.hist.push({d:res.d,ok:!!res.ok||res.d>0}); g.bail=false;
   if(g.cap<100 && g.si<SC.length-1){ g.cap=100; g.bail=true; }
 }
 function pqNext(){
@@ -1005,9 +1005,9 @@ function vPQEnd(){
   const g=S.pq, SC=D().sc, c=g.cap, rk = c>=400?"Expert de la session" : c>=280?"Fin analyste" : c>=200?"Joueur prudent" : "Apprenti";
   app.innerHTML = `
   <section class="panel"><span class="eyebrow">${D().sim.name} · bilan</span>
-  <div class="row"><div><div class="big">${c} $</div><span class="muted">capital final (départ : 200 $)</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div></div>
+  <div class="row"><div><div class="big">${c} $</div><span class="muted">capital final (départ : 200 $)</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div><div><div class="big">${g.hist.filter(x=>x.ok).length} / ${SC.length}</div><span class="muted">bons choix</span></div></div>
   <p>${g.rec ? "C'est ton record." : "Record à battre : "+B().pq+" $."} Certains résultats dépendent du hasard : rejoue, les situations ne tourneront pas pareil.</p>
-  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i]>0?"oui":g.hist[i]<0?"non":""}">${sgn(g.hist[i])}</b></div>`).join("")}
+  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i].ok?"oui":g.hist[i].d<0?"non":""}">${g.hist[i].ok?"✓ ":""}${sgn(g.hist[i].d)}</b></div>`).join("")}
   <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="pqStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>`;
 }
 
