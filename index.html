@@ -214,7 +214,7 @@ sc:[
   lesson:"La couche 1 est sûre et décentralisée, mais son débit est limité, donc ses frais montent. Une couche 2 comme Lightning traite des milliers de petits paiements à côté et n'inscrit sur la chaîne principale que l'ouverture et la clôture.",
   nodes:{a:{x:"30 cafés à payer. Chaque paiement direct sur la chaîne principale coûte 2 $ de frais.", ch:[
    {l:"Payer chaque café sur la chaîne principale", f:()=>({d:-60,r:"30 paiements × 2 $ = 60 $ de frais pour des cafés à 3 $. La couche 1 n'est pas faite pour ça."})},
-   {l:"Ouvrir un canal Lightning", s:"ouverture ≈ 2 $", f:()=>({d:-4,r:"Ouverture et fermeture du canal sur la chaîne (2 $ chacune), puis 30 paiements quasi gratuits : environ 4 $ de frais au total, au lieu de 60 $."})}]}}}
+   {l:"Ouvrir un canal Lightning", s:"ouverture ≈ 2 $", f:()=>({d:-4,ok:1,r:"Ouverture et fermeture du canal sur la chaîne (2 $ chacune), puis 30 paiements quasi gratuits : environ 4 $ de frais au total, au lieu de 60 $."})}]}}}
 ]});
 
 SESSIONS.push({id:"s2", n:2, title:"Bitcoin et monnaie numérique", short:"Bitcoin et monnaie",
@@ -282,7 +282,7 @@ sc:[
  {t:"Les 50 petites pièces", c:"Taille de transaction et UTXO", q:"Ton portefeuille contient 50 petits paiements reçus. Tu devras bientôt tout envoyer d'un coup.", facts:[["Mempool aujourd'hui","presque vide"],["Mempool la semaine prochaine","chargé"]],
   lesson:"Une transaction qui rassemble beaucoup d'entrées pèse lourd en données, donc coûte cher. Les regrouper (consolider) quand le réseau est calme réduit la facture le jour où l'envoi devient urgent.",
   nodes:{a:{x:"Le réseau est calme aujourd'hui, mais la semaine prochaine, quand tu devras payer, il sera saturé.", ch:[
-   {l:"Les regrouper aujourd'hui en une seule pièce", s:"frais ≈ 3 $", f:()=>({d:-6,r:"3 $ aujourd'hui, puis la semaine prochaine un envoi léger d'une seule entrée : 3 $ de plus. 6 $ au total."})},
+   {l:"Les regrouper aujourd'hui en une seule pièce", s:"frais ≈ 3 $", f:()=>({d:-6,ok:1,r:"3 $ aujourd'hui, puis la semaine prochaine un envoi léger d'une seule entrée : 3 $ de plus. 6 $ au total."})},
    {l:"Tout envoyer la semaine prochaine", f:()=>({d:-45,r:"Une transaction à 50 entrées, en plein encombrement : 45 $ de frais. Le montant n'y est pour rien, c'est le poids qui coûte."})}]}}},
  {t:"Le café sans frais", c:"Lightning Network", q:"Tu tiens un café. Des clients veulent payer leur expresso à 3 $ en bitcoin.", facts:[["Frais sur la chaîne","2 à 4 $"],["Frais Lightning","quelques sats"]],
   lesson:"Sur la chaîne principale, les frais peuvent dépasser le prix d'un café et la confirmation prend 10 minutes. Lightning règle les petits paiements en une seconde pour quelques satoshis.",
@@ -352,7 +352,7 @@ sc:[
   lesson:"Le gas mesure le calcul nécessaire ; son prix monte quand le réseau est encombré. Une opération non urgente coûte souvent bien moins cher aux heures calmes.",
   nodes:{a:{x:"Un lancement de jeton populaire sature le réseau. Ton échange coûterait 40 $ de frais.", ch:[
    {l:"Envoyer tout de suite", f:()=>({d:-40,r:"Tu paies 40 $ de frais pour un échange qui pouvait attendre."})},
-   {l:"Attendre la nuit", f:()=>({d:-4,r:"À 3 h du matin, le réseau est calme : le même échange coûte 4 $."})}]}}},
+   {l:"Attendre la nuit", f:()=>({d:-4,ok:1,r:"À 3 h du matin, le réseau est calme : le même échange coûte 4 $."})}]}}},
  {t:"L'échange qui échoue", c:"Comptes contre eUTXO", q:"Ton échange a de bonnes chances d'échouer : le prix bouge vite.", facts:[["Ethereum","frais payés même en cas d'échec"],["Cardano","échec détecté avant l'envoi"]],
   lesson:"Sur Ethereum, une transaction qui échoue a déjà consommé du calcul : on paie le gas quand même. Avec le modèle eUTXO de Cardano, le portefeuille valide la transaction localement avant l'envoi : on sait si elle passera et combien elle coûtera.",
   nodes:{a:{x:"Tu peux faire le même échange sur Ethereum ou sur Cardano.", ch:[
@@ -367,7 +367,7 @@ sc:[
   lesson:"Un pont verrouille des jetons sur une chaîne pour en émettre l'équivalent sur une autre. Il concentre d'énormes montants et une logique complexe : c'est une cible de choix, comme Ronin (environ 600 M$) ou Wormhole (environ 320 M$).",
   nodes:{a:{x:"Un nouveau pont, ni audité ni éprouvé, offre un bonus de 20 $ à ses premiers utilisateurs.", ch:[
    {l:"Le nouveau pont pour le bonus", f:()=> Math.random()<.4 ? {d:-100,r:"Le pont est piraté deux jours plus tard. Les jetons verrouillés sont volés et ta version de l'autre côté ne vaut plus rien."} : {d:20,r:"Tout se passe bien, tu touches le bonus. Mais tu as risqué 100 $ pour 20 $."}},
-   {l:"Le pont établi et audité", s:"frais 2 $", f:()=>({d:-2,r:"Transfert réussi pour 2 $ de frais. Aucun pont n'est sans risque, mais celui-ci a fait ses preuves."})}]}}},
+   {l:"Le pont établi et audité", s:"frais 2 $", f:()=>({d:-2,ok:1,r:"Transfert réussi pour 2 $ de frais. Aucun pont n'est sans risque, mais celui-ci a fait ses preuves."})}]}}},
  {t:"La DAO miracle", c:"Risque des contrats intelligents", q:"Une nouvelle DAO d'investissement lève des fonds. Son code n'a jamais été audité.", facts:[["Rendement promis","+50 %"],["Audit","aucun"]],
   lesson:"Un contrat intelligent exécute son code tel quel, failles comprises. En 2016, une faille dans The DAO a permis de vider environ un tiers de ses fonds et conduit au hard fork qui a donné Ethereum Classic. Un audit et du recul réduisent le risque sans le supprimer.",
   nodes:{a:{x:"Tu peux y placer 100 $.", ch:[
@@ -438,7 +438,7 @@ sc:[
   lesson:"La phrase doit toujours être générée par l'appareil, devant toi. Un appareil d'occasion ou une boîte contenant déjà une phrase imprimée signale une attaque : quelqu'un d'autre connaît la clé.",
   nodes:{a:{x:"Le colis arrive. Dans la boîte, une carte avec 24 mots déjà imprimés : « votre phrase de récupération ».", ch:[
    {l:"Utiliser cette phrase, c'est pratique", f:()=>({d:-200,r:"Le vendeur avait gardé une copie. Dès que tu déposes ton épargne, elle est vidée."})},
-   {l:"Ne pas l'utiliser et racheter chez le fabricant", f:()=>({d:-60,r:"Les 60 $ de la fausse bonne affaire sont perdus, mais ton épargne est en sécurité sur un appareil qui a généré sa propre phrase devant toi."})}]}}},
+   {l:"Ne pas l'utiliser et racheter chez le fabricant", f:()=>({d:-60,ok:1,r:"Les 60 $ de la fausse bonne affaire sont perdus, mais ton épargne est en sécurité sur un appareil qui a généré sa propre phrase devant toi."})}]}}},
  {t:"L'adresse jumelle", c:"Empoisonnement d'adresse", q:"Tu renvoies des fonds vers ta propre adresse, copiée depuis ton historique.", facts:[["Ton adresse","bc1q7x…4m…9kf2"],["Adresse récente","bc1q7x…8z…9kf2"]],
   lesson:"L'attaquant envoie une transaction minuscule depuis une adresse qui imite le début et la fin de la tienne, pour qu'elle apparaisse dans ton historique. Seule une vérification de l'adresse entière, sur l'écran du portefeuille matériel, protège.",
   nodes:{a:{x:"Ton historique montre une adresse qui commence et finit comme la tienne. Elle vient d'apparaître après un dépôt de 0,0001 $.", ch:[
@@ -459,7 +459,7 @@ sc:[
   lesson:"Une erreur de réseau ou d'adresse est irréversible. Un petit envoi de test, vérifié à l'arrivée, coûte quelques frais et évite de tout perdre.",
   nodes:{a:{x:"Tu as recopié l'adresse et choisi un réseau dans la liste de la plateforme.", ch:[
    {l:"Tout envoyer d'un coup", f:()=> Math.random()<.35 ? {d:-200,r:"Tu as choisi le mauvais réseau dans la liste. Les fonds arrivent sur une chaîne que ton portefeuille ne gère pas : irrécupérables."} : {d:-1,r:"Tout est bien arrivé. Tu as eu de la chance de ne pas te tromper de réseau."}},
-   {l:"Envoyer 5 $ de test d'abord", s:"frais en plus", f:()=>({d:-6,r:"Les 5 $ de test n'arrivent pas : le réseau choisi était le mauvais. Tu perds ces 5 $ et 1 $ de frais, tu corriges le réseau, et ton épargne arrive entière."})}]}}}
+   {l:"Envoyer 5 $ de test d'abord", s:"frais en plus", f:()=>({d:-6,ok:1,r:"Les 5 $ de test n'arrivent pas : le réseau choisi était le mauvais. Tu perds ces 5 $ et 1 $ de frais, tu corriges le réseau, et ton épargne arrive entière."})}]}}}
 ]});
 
 SESSIONS.push({id:"s5", n:5, title:"Finance décentralisée (DeFi)", short:"DeFi",
@@ -520,13 +520,13 @@ sc:[
    {l:"6 000 USDC", s:"liquidation à 1 440 $", f:()=>({d:15,r:"L'ETH chute à 2 250 $ la semaine suivante. Ton facteur de santé baisse, mais reste loin de 1 : tu gardes ta position et ton emprunt te rapporte 15 $."})}]},
   b:{x:"Une semaine plus tard, l'ETH tombe à 2 250 $ (−25 %). Ta position est sous le seuil.", ch:[
    {l:"Ne rien faire", f:()=>({d:-60,r:"Un robot liquide une partie de tes ETH pour rembourser le prêteur, avec une pénalité. Tu gardes tes USDC mais perds une bonne part de ta garantie."})},
-   {l:"Rembourser une partie de la dette", f:()=>({d:-10,r:"Tu remontes ton facteur de santé au-dessus de 1, juste à temps. Quelques frais, mais pas de liquidation."})}]}}},
+   {l:"Rembourser une partie de la dette", f:()=>({d:-10,ok:1,r:"Tu remontes ton facteur de santé au-dessus de 1, juste à temps. Quelques frais, mais pas de liquidation."})}]}}},
  {t:"La grosse vente", c:"AMM, x · y = k et glissement", q:"Tu dois vendre 10 ETH contre des USDC.", facts:[["Petit pool","100 ETH / 300 000 USDC"],["Prix affiché","3 000 $"]],
   lesson:"Dans un pool x · y = k, chaque échange déplace le prix. Vendre 10 ETH dans un pool de 100 ETH rapporte en moyenne 2 727 $ par ETH, et le pool affiche ensuite 2 479 $. Un pool deux fois plus profond limite le glissement (environ 2 857 $).",
   nodes:{a:{x:"Où vends-tu tes 10 ETH ?", ch:[
    {l:"D'un coup, dans ce petit pool", f:()=>({d:-27,r:"Tu reçois 27 273 USDC au lieu de 30 000 : 9 % de glissement. Le pool affiche maintenant 2 479 $."})},
    {l:"D'un coup, dans un pool deux fois plus profond", f:()=>({d:-14,r:"Tu reçois environ 28 571 USDC : le glissement tombe à moins de 5 %."})},
-   {l:"Via un agrégateur qui répartit l'ordre", f:()=>({d:-6,r:"L'ordre est découpé entre plusieurs pools profonds : environ 2 % de glissement seulement."})}]}}},
+   {l:"Via un agrégateur qui répartit l'ordre", f:()=>({d:-6,ok:1,r:"L'ordre est découpé entre plusieurs pools profonds : environ 2 % de glissement seulement."})}]}}},
  {t:"Le pool qui rapporte", c:"Perte impermanente", q:"Tu as 100 $ : moitié ETH, moitié USDC. Que fais-tu pendant un mois ?", facts:[["Frais du pool ETH/USDC","≈ 3 $ par mois"],["Frais du pool USDC/USDT","≈ 1 $ par mois"]],
   lesson:"Quand le prix bouge, les arbitragistes rachètent au pool le jeton qui monte : le LP vend ses gagnants. Si l'ETH double, sa position vaut 2√2 × 50 ≈ 141 $ au lieu de 150 $ en simple détention, soit −5,7 %. Fournir de la liquidité ne paie que si les frais dépassent cette perte.",
   nodes:{a:{x:"Pendant ce mois, l'ETH va doubler (tu ne le sais pas encore).", ch:[
@@ -548,7 +548,7 @@ sc:[
   lesson:"Un jeton de staking liquide est une créance sur des jetons stakés, pas un ticket de sortie instantanée. La rédemption par le protocole est lente ; la vente sur le marché est rapide, mais au prix des acheteurs présents.",
   nodes:{a:{x:"Comment récupères-tu tes fonds à temps ?", ch:[
    {l:"Demander la rédemption au protocole", f:()=>({d:-30,r:"Il faut 15 jours d'attente puis 2 jours pour réclamer. Tu paies ton loyer en retard, avec pénalités."})},
-   {l:"Vendre le sAVAX sur le marché", f:()=>({d:-3,r:"Vendu en quelques secondes, environ 1 % sous sa valeur. Le loyer est payé à temps."})}]}}}
+   {l:"Vendre le sAVAX sur le marché", f:()=>({d:-3,ok:1,r:"Vendu en quelques secondes, environ 1 % sous sa valeur. Le loyer est payé à temps."})}]}}}
 ]});
 
 SESSIONS.push({id:"s6", n:6, title:"Les marchés prédictifs", short:"Marchés prédictifs",
@@ -756,6 +756,90 @@ sc:[
    {l:"Avec un portefeuille crypto (stablecoins ou Lightning)", f:()=>({d:40,r:"L'agent détient sa propre clé et paie chaque seconde de calcul pour quelques fractions de centime."})}]}}}
 ]});
 
+SESSIONS.push({id:"s8", n:8, title:"Tokenisation et stablecoins", short:"Tokenisation et stablecoins",
+sim:{name:"La Fonderie", tag:"SIM", desc:"Immeuble en jetons, USDT, DAI, UST, euro numérique : cinq décisions où tout se joue sur qui se tient derrière le jeton."},
+notions:[
+ ["Tokenisation","Créer sur la blockchain une représentation d'un actif qui n'y est pas né","Un bon du Trésor dans le fonds BUIDL"],
+ ["RWA","Un actif du monde réel tokenisé","38,8 Md$ hors stablecoins en 2026"],
+ ["Dépositaire","L'entité qui garde l'actif réel et émet le jeton","Tether pour l'USDT"],
+ ["Marché primaire","Émission et rachat entre le dépositaire et le détenteur","Déposer 1 $ chez Tether contre 1 USDT"],
+ ["Marché secondaire","Les échanges de jetons entre détenteurs","Revendre ses USDT sur un exchange"],
+ ["Propriété fractionnée","Un bien cher découpé en petits jetons","1/1000e d'un immeuble"],
+ ["BUIDL","Le fonds tokenisé de bons du Trésor de BlackRock, permissionné","≈ 2,8 Md$ en août 2026"],
+ ["Stablecoin","Une crypto qui vise un prix stable","USDT, USDC, DAI"],
+ ["Ancrage","Le prix cible d'un stablecoin","1 USDT = 1 $"],
+ ["Garantie exogène","Des actifs extérieurs à la blockchain derrière le stablecoin","Dollars et bons du Trésor de Tether"],
+ ["Garantie endogène","Des cryptos natives derrière le stablecoin","L'ETH derrière le DAI"],
+ ["Surgarantie","Bloquer plus de valeur qu'on emprunte","150 $ d'ETH pour 100 DAI"],
+ ["Stablecoin algorithmique","Un ancrage tenu par la création et la destruction de deux jetons","UST et Luna"],
+ ["Jeton action","Le jeton à prix libre d'un stablecoin algorithmique","Luna, pari sur l'écosystème Terra"],
+ ["Jeudi noir","Mars 2020 : l'ETH perd ~50 % et le DAI passe au-dessus de 1 $","Un décrochage vers le haut"],
+ ["CBDC","Une monnaie numérique émise par une banque centrale","L'euro numérique"],
+ ["CBDC de gros","Une CBDC réservée aux banques et institutions","Règlements interbancaires"],
+ ["CBDC à jetons","Une CBDC détenue via une clé privée, proche du liquide","Plus de confidentialité qu'un compte"],
+ ["Désintermédiation","Les dépôts quittent les banques pour la CBDC","Une panique bancaire en un clic"],
+ ["Dépôt tokenisé","Un dépôt bancaire en jeton, émis par une banque régulée","Juste milieu CBDC / stablecoin"]
+],
+vf:[
+ ["Le stablecoin est de loin le plus gros actif tokenisé.",true,"302,9 Md$, contre 38,8 Md$ pour tous les autres actifs réels tokenisés."],
+ ["Un jeton sur blockchain décentralisée garantit que l'actif derrière l'est aussi.",false,"L'actif dépend souvent d'un seul dépositaire : la confiance revient."],
+ ["Tokeniser un actif suffit à le rendre liquide.",false,"Il faut des acheteurs. Marchés fragmentés ou réservés restent minces."],
+ ["Sur le marché primaire, on échange avec le dépositaire.",true,"Émission et rachat. Entre détenteurs, c'est le marché secondaire."],
+ ["BUIDL est ouvert à tous les particuliers.",false,"Il est permissionné : réservé aux institutions vérifiées."],
+ ["BlackRock tokenise BUIDL via Securitize.",true,"Comme le montre le tutoriel RWA.xyz."],
+ ["99,6 % des utilisateurs d'actifs tokenisés ont détenu un stablecoin.",true,"Les autres actifs tokenisés restent une niche."],
+ ["Un stablecoin en dollars garde stable ton pouvoir d'achat.",false,"Il garde stable son prix en dollars. Le dollar, lui, perd de la valeur."],
+ ["La volatilité empêche une crypto d'être une bonne unité de compte.",true,"Personne n'affiche ses prix dans une monnaie qui bouge sans cesse."],
+ ["USDT est garanti par de l'ETH bloqué dans des contrats.",false,"Par des réserves détenues par Tether : dollars, bons du Trésor…"],
+ ["Avec USDT, il faut croire que Tether détient vraiment ses réserves.",true,"C'est le prix de la centralisation."],
+ ["Le DAI est surgaranti.",true,"On bloque par exemple 150 $ d'ETH pour émettre 100 DAI."],
+ ["Le Jeudi noir de mars 2020, le DAI est tombé sous 0,50 $.",false,"Il est passé au-dessus de 1 $ : pénurie de DAI."],
+ ["La plupart des stablecoins décrochent vers le haut.",false,"Vers le bas, par faillite ou panique. Le DAI de 2020 est une exception."],
+ ["Un stablecoin algorithmique est efficace en capital mais risqué.",true,"Il est adossé en fait à la confiance dans son jeton action."],
+ ["Pour défendre UST, Terra a émis massivement des Luna.",true,"L'offre de Luna a explosé et son prix s'est effondré avec UST."],
+ ["Si un stablecoin algorithmique vaut 1,10 $, l'arbitragiste en détruit.",false,"Il en crée pour le vendre 1,10 $ : plus d'offre, le prix redescend."],
+ ["Une CBDC de détail est destinée aux particuliers.",true,"La CBDC de gros est réservée aux banques."],
+ ["En mai 2026, une centaine de pays ont déjà lancé une CBDC.",false,"146 pays en explorent une, 3 seulement l'ont lancée."],
+ ["Une CBDC peut faciliter les paniques bancaires.",true,"On vide son compte vers la monnaie la plus sûre en un clic."],
+ ["Plafonner les avoirs en CBDC limite la désintermédiation.",true,"Avec les taux échelonnés et la distribution par les banques."],
+ ["Une CBDC à comptes protège mieux la vie privée qu'une CBDC à jetons.",false,"C'est l'inverse : le compte est lié à l'identité."],
+ ["Un dépôt tokenisé est émis par une banque commerciale régulée.",true,"Et couvert par ses dépôts, sous le droit bancaire."],
+ ["Les banques préfèrent souvent le RTGS à la DLT pour sa scalabilité.",true,"Mais le RTGS n'offre pas la programmabilité de la DLT."]
+],
+sc:[
+ {t:"L'immeuble en jetons", c:"Tokenisation et dépositaire", q:"Une plateforme vend des « tranches » d'un immeuble parisien en jetons.", facts:[["Rendement promis","8 % par an"],["Ta mise","100 $"]],
+  lesson:"Le jeton prouve que tu as une part, pas que le dépositaire l'honorera. Avant d'acheter, on vérifie qui détient l'immeuble, quel droit relie le jeton au bien, et s'il existe des acheteurs pour revendre.",
+  nodes:{a:{x:"Le site est beau, les jetons s'échangent sur une blockchain publique. Que fais-tu ?", ch:[
+   {l:"Acheter tout de suite", f:()=> Math.random()<.5 ? {d:-60,r:"La société qui détient l'immeuble fait faillite. Ton jeton existe toujours sur la chaîne, mais plus personne ne le rachète."} : {d:8,r:"Les loyers tombent : +8 $. Mais quand tu veux revendre, il n'y a presque aucun acheteur."}},
+   {l:"Lire qui détient l'immeuble et comment on revend", f:()=>({to:"b"})}]},
+  b:{x:"Le bien est détenu par une société sans audit. Le marché secondaire compte 4 acheteurs en tout.", ch:[
+   {l:"Acheter quand même", f:()=>({d:-40,r:"Tu as besoin de ton argent après six mois : tu revends à prix cassé, faute d'acheteurs."})},
+   {l:"Passer", f:()=>({d:0,ok:1,r:"Bon réflexe : dépositaire opaque et marché mince, deux pièges du cours réunis."})}]}}},
+ {t:"La rumeur sur les réserves", c:"Stablecoin centralisé", q:"Ton épargne de 200 $ est en USDT. Une rumeur affirme que l'émetteur n'a pas toutes ses réserves.", facts:[["Prix de l'USDT","0,99 $"],["Rachat chez l'émetteur","1 USDT = 1 $"]],
+  lesson:"Un stablecoin garanti par des réserves tient tant que l'émetteur les a vraiment et honore les rachats. Diversifier entre émetteurs réduit la dépendance à une seule entreprise.",
+  nodes:{a:{x:"Que fais-tu de tes 200 USDT ?", ch:[
+   {l:"Tout vendre en panique à 0,95 $", f:()=>({d:-10,r:"Tu vends au creux. Deux jours plus tard, l'USDT est revenu à 1 $."})},
+   {l:"Répartir sur deux stablecoins d'émetteurs différents", s:"frais 1 $", f:()=>({d:-1,ok:1,r:"La rumeur retombe. Tu as payé 1 $ pour ne plus dépendre d'un seul émetteur."})},
+   {l:"Ne rien faire", f:()=> Math.random()<.85 ? {d:0,r:"La rumeur retombe, l'ancrage tient. Mais tout reposait sur la confiance en un seul émetteur."} : {d:-60,r:"Dans ce scénario, les réserves manquaient vraiment : l'USDT tombe à 0,70 $."}}]}}},
+ {t:"Le jeudi noir", c:"DAI et surgarantie", q:"Mars 2020. Tu as bloqué 150 $ d'ETH pour emprunter 100 DAI. L'ETH s'effondre de 40 % dans la journée.", facts:[["Ta garantie","90 $"],["Ta dette","100 DAI"]],
+  lesson:"Le DAI naît des emprunteurs. Quand l'ETH s'effondre, tout le monde veut du DAI pour rembourser ou se réfugier, mais personne ne peut en créer : le DAI passe au-dessus de 1 $. Rembourser tôt coûte un peu, attendre peut coûter la liquidation.",
+  nodes:{a:{x:"Ta garantie ne couvre plus ta dette. Le DAI vaut déjà 1,04 $.", ch:[
+   {l:"Racheter du DAI et rembourser tout de suite", f:()=>({d:-4,ok:1,r:"Tu paies 104 $ pour 100 DAI, mais tu récupères ton ETH. Une perte de 4 $ au lieu d'une liquidation."})},
+   {l:"Attendre que ça se calme", f:()=>({d:-50,r:"Ton coffre est liquidé avec pénalité. Le DAI est monté à 1,10 $ : le rembourser aurait coûté plus cher encore."})}]}}},
+ {t:"Le rendement de 20 %", c:"Stablecoin algorithmique", q:"Avril 2022. Un protocole paie 20 % par an sur ton stablecoin algorithmique, ancré à 1 $.", facts:[["Rendement","20 % / an"],["Ta mise","200 $"]],
+  lesson:"Un stablecoin algorithmique tient tant que tout le monde croit à son jeton action. Quand la confiance casse, le protocole émet du jeton action pour défendre l'ancrage et les deux plongent ensemble : c'est la spirale d'UST et Luna en mai 2022.",
+  nodes:{a:{x:"Que fais-tu ?", ch:[
+   {l:"Placer 200 $ pour le rendement", f:()=>({d:-190,r:"Mai 2022 : le stablecoin décroche, le jeton action est émis en masse et s'effondre avec lui. Tes 200 $ valent quelques dollars."})},
+   {l:"Placer seulement 20 $", f:()=>({d:-19,r:"Même effondrement, mais tu n'avais risqué que ce que tu pouvais perdre."})},
+   {l:"Rester sur un stablecoin garanti par des réserves", f:()=>({d:4,ok:1,r:"Rendement modeste via des bons du Trésor tokenisés, ancrage intact pendant la crise."})}]}}},
+ {t:"L'euro numérique", c:"CBDC et dépôts", q:"Ta banque vacille. Tu as 200 $ sur ton compte, et ton pays a lancé une CBDC plafonnée à 3 000 par personne.", facts:[["Compte bancaire","200 $"],["Garantie des dépôts","jusqu'à 100 000"]],
+  lesson:"Une CBDC est une créance directe sur la banque centrale : la plus sûre, mais si tout le monde y fuit en même temps, les banques se vident. D'où les plafonds, les taux échelonnés et l'assurance des dépôts, qui protège déjà les petits montants.",
+  nodes:{a:{x:"Les réseaux sociaux appellent à tout transférer vers la CBDC.", ch:[
+   {l:"Tout transférer vers la CBDC", f:()=>({d:0,ok:1,r:"Ton argent est à l'abri chez la banque centrale. Si tout le monde le fait, c'est justement la panique en un clic que redoutent les régulateurs."})},
+   {l:"Rester : mes dépôts sont garantis", f:()=>({d:0,ok:1,r:"La garantie des dépôts couvre tes 200 $. Les deux choix te protègent ; le plafond de la CBDC sert à éviter que tout le monde vide les banques."})},
+   {l:"Tout convertir en stablecoin d'une petite plateforme", f:()=>({d:-50,r:"La plateforme suspend les retraits pendant la panique. Tu as quitté une banque garantie pour un émetteur qui ne l'est pas."})}]}}}
+]});
+
 
 SESSIONS.sort((a,b)=>a.n-b.n);
 
@@ -898,7 +982,7 @@ function vPQ(){
   <div class="bar"><div class="hud"><span>Situation <b>${g.si+1}</b> / ${SC.length}</span><span>Capital <b>${g.cap} $</b></span></div><button class="link" data-act="hub">Quitter</button></div>
   <div class="prog"><i style="width:${(g.si+(g.out?1:0))/SC.length*100}%"></i></div>
   <section class="panel"><span class="eyebrow">${sc.t}</span><h2>${sc.q}</h2>${panel(sc,nd)}
-  ${g.out ? `<div class="fb ${g.out.d>0?"ok":g.out.d<0?"ko":"ne"}" role="status"><span class="res">${sgn(g.out.d)}</span><span>${g.out.r}</span></div>
+  ${g.out ? `<div class="fb ${g.out.ok||g.out.d>0?"ok":g.out.d<0?"ko":"ne"}" role="status"><span class="res">${sgn(g.out.d)}${g.out.ok&&g.out.d<=0?" · meilleur choix":""}</span><span>${g.out.r}</span></div>
       <div class="stack" style="gap:4px"><span class="eyebrow">À retenir · ${sc.c}</span><p>${sc.lesson}</p></div>
       ${g.bail?`<p class="muted small">Ton capital est passé sous 100 $ : un sponsor te renfloue à 100 $ pour la suite.</p>`:""}
       <button class="btn" data-act="pqNext" id="go">${g.si===SC.length-1?"Voir mon bilan":"Situation suivante"}</button>`
