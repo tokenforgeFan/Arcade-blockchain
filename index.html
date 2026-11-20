@@ -857,9 +857,11 @@ const noteOf = g => { const n=D().sc.length; return Math.round(g.hist.reduce((a,
 const fmtN = x => String(x).replace(".",",");
 /* Note des Paires : 0:50 ou moins = 20, puis 1 point de moins par tranche de 10 s (0:51–1:00 = 19, 1:01–1:10 = 18…), minimum 0. */
 const noteAS = s => s<=50 ? 20 : Math.max(0, 20-Math.ceil((s-50)/10));
-/* Note du Vrai ou Faux : 15 bonnes réponses nettes = 20/20 ; chaque erreur retire une demi-bonne réponse. */
-const noteVF = (ok,err) => Math.max(0, Math.min(20, Math.round((ok-err/2)/15*20*2)/2));
-const sessNote = b => (b.note!=null && b.vfn!=null && b.as!=null) ? Math.round((b.note+b.vfn+noteAS(b.as))/3*2)/2 : null;
+/* Note du Vrai ou Faux : (bonnes réponses − erreurs) ÷ nombre de réponses données, avec un minimum de 20 réponses attendues en 60 s.
+   20 justes sans erreur = 20/20 ; 15 justes sans erreur = 15/20 ; 18 justes et 2 erreurs = 16/20. */
+const VF_MIN=20;
+const noteVF = (ok,err) => Math.max(0, Math.min(20, Math.round((ok-err)/Math.max(ok+err,VF_MIN)*20*2)/2));
+const sessNote = b => (b.note!=null && b.vfn2!=null && b.as!=null) ? Math.round((b.note+b.vfn2+noteAS(b.as))/3*2)/2 : null;
 const mention = n => n>=16?"Très bien":n>=14?"Bien":n>=12?"Assez bien":n>=10?"Passable":"Insuffisant";
 
 
@@ -902,7 +904,7 @@ function vHome(){
   app.innerHTML = `
   <header class="stack"><h1>Arcade-<span class="oui">Blockchain</span></h1>
   <p class="muted">Une évaluation par session : d'abord le cours, puis les tests notés — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
-  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn,b.as].filter(x=>x!=null).length, sn=sessNote(b);
+  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn2,b.as].filter(x=>x!=null).length, sn=sessNote(b);
     return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
     ${sn!=null?`<span class="mono" style="font-weight:700;color:var(--gold)">${fmtN(sn)} / 20</span>`:`<span class="dots" aria-label="${done} test(s) sur 3 déjà notés">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span>`}</button>`; }).join("")}</div>
   <p class="muted small">Évaluation pédagogique notée sur 20, aucun conseil en investissement. Tes records restent sur cet appareil.</p>`;
@@ -910,7 +912,7 @@ function vHome(){
 
 function sessBox(){
   const b=B(), n=sessNote(b);
-  const parts=[[D().sim.name,b.note],["Vrai ou Faux",b.vfn],["Les Paires",b.as!=null?noteAS(b.as):null]];
+  const parts=[[D().sim.name,b.note],["Vrai ou Faux",b.vfn2],["Les Paires",b.as!=null?noteAS(b.as):null]];
   return `<div class="fb ${n==null?"ne":n>=10?"ok":"ko"}"><span class="res">Note de la session ${D().n} : ${n==null?"à compléter":fmtN(n)+" / 20 · "+mention(n)}</span>
   <span class="small">${parts.map(x=>x[0]+" "+(x[1]==null?"—":fmtN(x[1])+"/20")).join(" · ")}${n==null?" — joue les 3 tests pour l'obtenir.":" — moyenne de tes meilleures notes."}</span></div>`;
 }
@@ -922,8 +924,8 @@ function vHub(){
   <p class="eyebrow" style="margin-top:8px">2 · Tests ${b.cours?"":"(verrouillés tant que le cours n'est pas lu)"} · chaque mauvaise réponse te pénalise</p>
   <button class="game" data-act="pqStart" ${b.cours?"":"disabled"}><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
     <span class="rec">Meilleure note<b>${b.note!=null? fmtN(b.note)+" / 20":"—"}</b></span></button>
-  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Noté sur 20 : 15 bonnes réponses nettes = 20/20, une erreur retire une demi-bonne réponse.</span></span>
-    <span class="rec">Meilleure note<b>${b.vfn!=null? fmtN(b.vfn)+" / 20":"—"}</b></span></button>
+  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Noté sur 20 : il faut au moins 20 réponses justes sans faute pour 20/20. Chaque erreur annule une bonne réponse.</span></span>
+    <span class="rec">Meilleure note<b>${b.vfn2!=null? fmtN(b.vfn2)+" / 20":"—"}</b></span></button>
   <button class="game" data-act="asStart" ${b.cours?"":"disabled"}><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Noté au chrono : 0:50 ou moins = 20/20, puis −1 point par tranche de 10 s. Une erreur coûte 5 secondes.</span></span>
     <span class="rec">Meilleure note<b>${b.as!=null? noteAS(b.as)+" / 20":"—"}</b></span></button>
 `;
@@ -951,13 +953,13 @@ function vfAns(v){
   else { sBad(); g.score-=5; g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
 }
 function vfAdvance(){ const g=S.vf; g.wait=false; g.i++; if(g.i>=g.deck.length) vfEnd(); }
-function vfEnd(){ sWin(); const g=S.vf, b=B(); g.note=noteVF(g.ok,g.n-g.ok); g.rec = b.vfn==null || g.note>b.vfn; if(g.rec) b.vfn=g.note; if(b.vf==null || g.score>b.vf) b.vf=g.score; save(); S.view="vfEnd"; }
+function vfEnd(){ sWin(); const g=S.vf, b=B(); g.note=noteVF(g.ok,g.n-g.ok); g.rec = b.vfn2==null || g.note>b.vfn2; if(g.rec) b.vfn2=g.note; if(b.vf==null || g.score>b.vf) b.vf=g.score; save(); S.view="vfEnd"; }
 function vVFEnd(){
   const g=S.vf, V=D().vf;
   app.innerHTML = `
   <section class="panel"><span class="eyebrow">Vrai ou Faux éclair · terminé</span>
   <div class="row"><div><div class="big">${fmtN(g.note)}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><div class="big">${g.ok} / ${g.n}</div><span class="muted">bonnes réponses</span></div><div><div class="big">${g.score}</div><span class="muted">points</span></div></div>
-  <p>${g.rec ? "C'est ta meilleure note." : "Meilleure note : "+fmtN(B().vfn)+" / 20."} Barème : 15 bonnes réponses nettes = 20/20, chaque erreur retire une demi-bonne réponse.</p>${sessBox()}
+  <p>${g.rec ? "C'est ta meilleure note." : "Meilleure note : "+fmtN(B().vfn)+" / 20."} Barème : (bonnes réponses − erreurs) ÷ réponses données × 20, avec au moins 20 réponses attendues. 20 justes sans faute = 20/20 ; 15 justes sans faute = 15/20.</p>${sessBox()}
   <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="vfStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
   ${g.miss.length ? `<section class="panel"><h3>À revoir</h3>${g.miss.map(i=>`<div class="miss"><b>${V[i][0]}</b><span><span class="${V[i][1]?"oui":"non"}">${V[i][1]?"Vrai":"Faux"}.</span> ${V[i][2]}</span></div>`).join("")}</section>`:""}`;
 }
