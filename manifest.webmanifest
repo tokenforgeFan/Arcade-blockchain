@@ -1,7 +1,7 @@
 {
-  "name": "Arcade du MOOC Blockchain",
-  "short_name": "Arcade",
-  "description": "Une arcade de révision par session du MOOC Blockchain and Digital Assets.",
+  "name": "Arcade-Blockchain",
+  "short_name": "Arcade-Blockchain",
+  "description": "Révision notée sur 20, session par session : blockchain et actifs numériques.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
