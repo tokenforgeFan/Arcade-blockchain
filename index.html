@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Arcade du MOOC Blockchain</title>
+<title>Arcade-Blockchain</title>
 <meta name="theme-color" content="#2B3FD6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Arcade">
+<meta name="apple-mobile-web-app-title" content="Arcade-Blockchain">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -123,7 +123,7 @@ input.search{width:100%;box-sizing:border-box;background:var(--surface);color:va
 
 <div class="wrap">
   <div class="bar">
-    <button class="link" data-act="home" id="crumb" style="padding-left:0">Arcade · MOOC Blockchain</button>
+    <button class="link" data-act="home" id="crumb" style="padding-left:0">Arcade-Blockchain</button>
     <span style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="pill" data-act="snd" id="sbtn">Son : oui</button>
       <button class="pill" data-act="fiches" id="fbtn">Fiches</button>
@@ -218,7 +218,7 @@ sc:[
 ]});
 
 SESSIONS.push({id:"s2", n:2, title:"Bitcoin et monnaie numérique", short:"Bitcoin et monnaie",
-sim:{name:"La Mine", tag:"SIM", desc:"Mineur, commerçant ou simple détenteur : cinq décisions où les frais, le halving et les forks pèsent sur ton capital."},
+sim:{name:"La Mine", tag:"SIM", desc:"Mineur, commerçant ou simple détenteur : cinq décisions où les frais, le halving et les forks pèsent sur ta note."},
 notions:[
  ["Plafond de 21 millions","L'offre maximale de bitcoins, fixée par le protocole","Personne ne peut en créer davantage"],
  ["Halving","La division par deux de la subvention de bloc tous les 210 000 blocs","6,25 → 3,125 BTC en avril 2024"],
@@ -841,6 +841,28 @@ sc:[
 ]});
 
 
+/* Note du simulateur : points par choix (4 = meilleur choix, 2 = acceptable, 0 = mauvais). null = choix qui mène à une autre étape. */
+const SCORES={
+"s1-0-a":[0,4,2],"s1-1-a":[0,null],"s1-1-b":[4,0],"s1-2-a":[4,0],"s1-3-a":[4,0,2],"s1-4-a":[0,4],
+"s2-0-a":[0,4,2],"s2-1-a":[0,4,2],"s2-2-a":[4,0],"s2-3-a":[0,4,2],"s2-4-a":[4,0],
+"s3-0-a":[0,4],"s3-1-a":[2,4],"s3-2-a":[4,0],"s3-3-a":[0,4],"s3-4-a":[0,null,4],"s3-4-b":[0,4],
+"s4-0-a":[0,0,4],"s4-1-a":[0,4],"s4-2-a":[0,4],"s4-3-a":[0,4],"s4-4-a":[0,0,4],"s4-5-a":[0,4],
+"s5-0-a":[null,4],"s5-0-b":[0,2],"s5-1-a":[0,2,4],"s5-2-a":[4,2,2],"s5-3-a":[4,2],"s5-4-a":[0,4,2],"s5-5-a":[0,4],
+"s6-0-a":[null,null,2],"s6-0-b":[4,2],"s6-1-a":[4,0,0],"s6-2-a":[null,2,4],"s6-2-b":[2,0],"s6-3-a":[null,0,2],"s6-3-b":[4,0,2],"s6-4-a":[2,0,4],"s6-5-a":[4,0],
+"s7-0-a":[0,0,4],"s7-1-a":[4,2,2],"s7-2-a":[0,4,2],"s7-3-a":[4,0],"s7-4-a":[0,4],
+"s8-0-a":[0,null],"s8-0-b":[0,4],"s8-1-a":[0,4,2],"s8-2-a":[4,0],"s8-3-a":[0,2,4],"s8-4-a":[4,4,0]
+};
+const PTS=["Mauvais choix","","Choix acceptable","","Meilleur choix"];
+const noteOf = g => { const n=D().sc.length; return Math.round(g.hist.reduce((a,x)=>a+x.p,0)/(4*n)*20*2)/2; };
+const fmtN = x => String(x).replace(".",",");
+/* Note des Paires : 0:50 ou moins = 20, puis 1 point de moins par tranche de 10 s (0:51–1:00 = 19, 1:01–1:10 = 18…), minimum 0. */
+const noteAS = s => s<=50 ? 20 : Math.max(0, 20-Math.ceil((s-50)/10));
+/* Note du Vrai ou Faux : 15 bonnes réponses nettes = 20/20 ; chaque erreur retire une demi-bonne réponse. */
+const noteVF = (ok,err) => Math.max(0, Math.min(20, Math.round((ok-err/2)/15*20*2)/2));
+const sessNote = b => (b.note!=null && b.vfn!=null && b.as!=null) ? Math.round((b.note+b.vfn+noteAS(b.as))/3*2)/2 : null;
+const mention = n => n>=16?"Très bien":n>=14?"Bien":n>=12?"Assez bien":n>=10?"Passable":"Insuffisant";
+
+
 SESSIONS.sort((a,b)=>a.n-b.n);
 
 let AC=null, SOUND=true;
@@ -870,7 +892,7 @@ function start(data){
 function render(){
   const inS = S.view!=="home";
   document.getElementById("fbtn").hidden = !inS || S.view==="fiches" || S.view==="cours" || S.view==="hub";
-  document.getElementById("crumb").textContent = inS ? "← Session "+D().n+" · "+D().short : "Arcade · MOOC Blockchain";
+  document.getElementById("crumb").textContent = inS ? "← Session "+D().n+" · "+D().short : "Arcade-Blockchain";
   document.getElementById("crumb").dataset.act = inS && S.view!=="hub" ? "hub" : "home";
   document.getElementById("sbtn").textContent = "Son : "+(SOUND?"oui":"non");
   ({home:vHome, hub:vHub, vf:vVF, vfEnd:vVFEnd, as:vAS, asEnd:vASEnd, pq:vPQ, pqEnd:vPQEnd, fiches:vFiches, cours:vCours})[S.view]();
@@ -878,26 +900,32 @@ function render(){
 
 function vHome(){
   app.innerHTML = `
-  <header class="stack"><h1>L'arcade du <span class="oui">MOOC</span> Blockchain</h1>
-  <p class="muted">Une arcade par session : d'abord le cours, puis les tests — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
-  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.pq,b.vf,b.as].filter(x=>x!=null).length;
+  <header class="stack"><h1>Arcade-<span class="oui">Blockchain</span></h1>
+  <p class="muted">Une évaluation par session : d'abord le cours, puis les tests notés — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
+  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn,b.as].filter(x=>x!=null).length, sn=sessNote(b);
     return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
-    <span class="dots" aria-label="${done} jeu(x) sur 3 déjà joués">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span></button>`; }).join("")}</div>
-  <p class="muted small">Jeu pédagogique : argent fictif, aucun conseil en investissement. Tes records restent sur cet appareil.</p>`;
+    ${sn!=null?`<span class="mono" style="font-weight:700;color:var(--gold)">${fmtN(sn)} / 20</span>`:`<span class="dots" aria-label="${done} test(s) sur 3 déjà notés">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span>`}</button>`; }).join("")}</div>
+  <p class="muted small">Évaluation pédagogique notée sur 20, aucun conseil en investissement. Tes records restent sur cet appareil.</p>`;
 }
 
+function sessBox(){
+  const b=B(), n=sessNote(b);
+  const parts=[[D().sim.name,b.note],["Vrai ou Faux",b.vfn],["Les Paires",b.as!=null?noteAS(b.as):null]];
+  return `<div class="fb ${n==null?"ne":n>=10?"ok":"ko"}"><span class="res">Note de la session ${D().n} : ${n==null?"à compléter":fmtN(n)+" / 20 · "+mention(n)}</span>
+  <span class="small">${parts.map(x=>x[0]+" "+(x[1]==null?"—":fmtN(x[1])+"/20")).join(" · ")}${n==null?" — joue les 3 tests pour l'obtenir.":" — moyenne de tes meilleures notes."}</span></div>`;
+}
 function vHub(){
   const s=D(), b=B();
   app.innerHTML = `
-  <header class="stack"><span class="eyebrow">Session ${s.n}</span><h1>${s.title}</h1></header>
+  <header class="stack"><span class="eyebrow">Session ${s.n}</span><h1>${s.title}</h1></header>${b.cours?sessBox():""}
   <button class="game" data-act="cours"><span class="tag d">1 · COURS</span><span class="g"><b>${b.cours?"Revoir le cours":"Commencer par le cours"}</b><span class="muted">Les ${s.notions.length} notions clés de la session, avec un exemple pour chacune. À lire avant les tests.</span></span><span class="rec">Statut<b>${b.cours?"Lu":"À lire"}</b></span></button>
   <p class="eyebrow" style="margin-top:8px">2 · Tests ${b.cours?"":"(verrouillés tant que le cours n'est pas lu)"} · chaque mauvaise réponse te pénalise</p>
   <button class="game" data-act="pqStart" ${b.cours?"":"disabled"}><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
-    <span class="rec">Record<b>${b.pq!=null? b.pq+" $":"—"}</b></span></button>
-  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Bonne réponse +10 (×série), mauvaise réponse −5 points.</span></span>
-    <span class="rec">Record<b>${b.vf!=null? b.vf+" pts":"—"}</b></span></button>
-  <button class="game" data-act="asStart" ${b.cours?"":"disabled"}><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Une erreur coûte 5 secondes.</span></span>
-    <span class="rec">Record<b>${b.as!=null? fmtT(b.as):"—"}</b></span></button>
+    <span class="rec">Meilleure note<b>${b.note!=null? fmtN(b.note)+" / 20":"—"}</b></span></button>
+  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Noté sur 20 : 15 bonnes réponses nettes = 20/20, une erreur retire une demi-bonne réponse.</span></span>
+    <span class="rec">Meilleure note<b>${b.vfn!=null? fmtN(b.vfn)+" / 20":"—"}</b></span></button>
+  <button class="game" data-act="asStart" ${b.cours?"":"disabled"}><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Noté au chrono : 0:50 ou moins = 20/20, puis −1 point par tranche de 10 s. Une erreur coûte 5 secondes.</span></span>
+    <span class="rec">Meilleure note<b>${b.as!=null? noteAS(b.as)+" / 20":"—"}</b></span></button>
 `;
 }
 
@@ -923,13 +951,13 @@ function vfAns(v){
   else { sBad(); g.score-=5; g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
 }
 function vfAdvance(){ const g=S.vf; g.wait=false; g.i++; if(g.i>=g.deck.length) vfEnd(); }
-function vfEnd(){ sWin(); const g=S.vf, b=B(); g.rec = b.vf==null || g.score>b.vf; if(g.rec){ b.vf=g.score; save(); } S.view="vfEnd"; }
+function vfEnd(){ sWin(); const g=S.vf, b=B(); g.note=noteVF(g.ok,g.n-g.ok); g.rec = b.vfn==null || g.note>b.vfn; if(g.rec) b.vfn=g.note; if(b.vf==null || g.score>b.vf) b.vf=g.score; save(); S.view="vfEnd"; }
 function vVFEnd(){
   const g=S.vf, V=D().vf;
   app.innerHTML = `
   <section class="panel"><span class="eyebrow">Vrai ou Faux éclair · terminé</span>
-  <div class="row"><div><div class="big">${g.score}</div><span class="muted">points</span></div><div><div class="big">${g.ok} / ${g.n}</div><span class="muted">bonnes réponses</span></div></div>
-  <p>${g.rec ? "C'est ton record." : "Record à battre : "+B().vf+" points."}</p>
+  <div class="row"><div><div class="big">${fmtN(g.note)}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><div class="big">${g.ok} / ${g.n}</div><span class="muted">bonnes réponses</span></div><div><div class="big">${g.score}</div><span class="muted">points</span></div></div>
+  <p>${g.rec ? "C'est ta meilleure note." : "Meilleure note : "+fmtN(B().vfn)+" / 20."} Barème : 15 bonnes réponses nettes = 20/20, chaque erreur retire une demi-bonne réponse.</p>${sessBox()}
   <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="vfStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
   ${g.miss.length ? `<section class="panel"><h3>À revoir</h3>${g.miss.map(i=>`<div class="miss"><b>${V[i][0]}</b><span><span class="${V[i][1]?"oui":"non"}">${V[i][1]?"Vrai":"Faux"}.</span> ${V[i][2]}</span></div>`).join("")}</section>`:""}`;
 }
@@ -961,14 +989,14 @@ function vASEnd(){
   const g=S.as, N=D().notions;
   app.innerHTML = `
   <section class="panel"><span class="eyebrow">Les Paires · terminé</span>
-  <div class="row"><div><div class="big">${fmtT(g.t)}</div><span class="muted">temps final</span></div><div><div class="big">${g.err}</div><span class="muted">erreurs</span></div></div>
-  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtT(B().as)+"."} Tu as révisé ${g.pool.length} notions sur ${N.length} : chaque partie en tire d'autres.</p>
-  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="asStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
+  <div class="row"><div><div class="big">${fmtN(noteAS(Math.round(g.t)))}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><div class="big">${fmtT(g.t)}</div><span class="muted">temps final</span></div><div><div class="big">${g.err}</div><span class="muted">erreurs</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtT(B().as)+" ("+noteAS(B().as)+" / 20)."} Barème : 0:50 ou moins = 20/20, puis 1 point de moins par tranche de 10 s (pénalités comprises). Tu as révisé ${g.pool.length} notions sur ${N.length} : chaque partie en tire d'autres.</p>
+  ${sessBox()}<div class="bar" style="justify-content:flex-start"><button class="btn" data-act="asStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
   <section class="panel"><h3>Les notions de cette partie</h3>${g.pool.map(i=>`<div class="miss"><b>${N[i][0]}</b><span>${N[i][1]}</span><span class="muted">${N[i][2]}</span></div>`).join("")}</section>`;
 }
 
 /* ---------- Simulateur ---------- */
-function pqStart(){ S.pq={cap:200, si:0, node:"a", ctx:{}, out:null, hist:[], bail:false}; S.view="pq"; }
+function pqStart(){ S.pq={si:0, node:"a", ctx:{}, out:null, hist:[]}; S.view="pq"; }
 function panel(sc, nd){
   if(sc.book) return `<div class="mkt"><div class="o">Meilleur acheteur (bid)<b>0,${sc.book[0]} $</b></div><div class="n">Meilleur vendeur (ask)<b>0,${sc.book[1]} $</b></div></div>`;
   const m=nd.m||sc.m;
@@ -977,15 +1005,14 @@ function panel(sc, nd){
   return "";
 }
 function vPQ(){
-  const g=S.pq, SC=D().sc, sc=SC[g.si], nd=sc.nodes[g.node];
+  const g=S.pq, SC=D().sc, sc=SC[g.si], nd=sc.nodes[g.node], pts=g.hist.reduce((a,x)=>a+x.p,0);
   app.innerHTML = `
-  <div class="bar"><div class="hud"><span>Situation <b>${g.si+1}</b> / ${SC.length}</span><span>Capital <b>${g.cap} $</b></span></div><button class="link" data-act="hub">Quitter</button></div>
+  <div class="bar"><div class="hud"><span>Situation <b>${g.si+1}</b> / ${SC.length}</span></div><button class="link" data-act="hub">Quitter</button></div>
   <div class="prog"><i style="width:${(g.si+(g.out?1:0))/SC.length*100}%"></i></div>
   <section class="panel"><span class="eyebrow">${sc.t}</span><h2>${sc.q}</h2>${panel(sc,nd)}
-  ${g.out ? `<div class="fb ${g.out.ok||g.out.d>0?"ok":g.out.d<0?"ko":"ne"}" role="status"><span class="res">${sgn(g.out.d)}${g.out.ok&&g.out.d<=0?" · meilleur choix":""}</span><span>${g.out.r}</span></div>
+  ${g.out ? `<div class="fb ${g.out.p===4?"ok":g.out.p===0?"ko":"ne"}" role="status"><span class="res">${PTS[g.out.p]}</span><span>${g.out.r}</span></div>
       <div class="stack" style="gap:4px"><span class="eyebrow">À retenir · ${sc.c}</span><p>${sc.lesson}</p></div>
-      ${g.bail?`<p class="muted small">Ton capital est passé sous 100 $ : un sponsor te renfloue à 100 $ pour la suite.</p>`:""}
-      <button class="btn" data-act="pqNext" id="go">${g.si===SC.length-1?"Voir mon bilan":"Situation suivante"}</button>`
+      <button class="btn" data-act="pqNext" id="go">${g.si===SC.length-1?"Voir ma note":"Situation suivante"}</button>`
    : `<p>${nd.x}</p><div class="stack" style="gap:8px">${nd.ch.map((c,k)=>`<button class="choice" data-act="pqPick" data-k="${k}">${c.l}${c.s?`<span>${c.s}</span>`:""}</button>`).join("")}</div>`}
   </section>`;
   if(g.out) document.getElementById("go").focus({preventScroll:true});
@@ -993,21 +1020,21 @@ function vPQ(){
 function pqPick(k){
   const g=S.pq, SC=D().sc, sc=SC[g.si], res=sc.nodes[g.node].ch[k].f(g.ctx);
   if(res.to){ g.node=res.to; return; }
-  g.out=res; (res.ok||res.d>0?sGood:res.d<0?sBad:()=>{})(); g.cap+=res.d; g.hist.push({d:res.d,ok:!!res.ok||res.d>0}); g.bail=false;
-  if(g.cap<100 && g.si<SC.length-1){ g.cap=100; g.bail=true; }
+  const sco=SCORES[D().id+"-"+g.si+"-"+g.node], p=(sco && sco[k]!=null) ? sco[k] : 0;
+  g.out=Object.assign({},res,{p}); (p===4?sGood:p===0?sBad:()=>{})(); g.hist.push({p});
 }
 function pqNext(){
   const g=S.pq, SC=D().sc;
-  if(g.si<SC.length-1){ g.si++; g.node="a"; g.ctx={}; g.out=null; g.bail=false; }
-  else { sWin(); const b=B(); g.rec = b.pq==null || g.cap>b.pq; if(g.rec){ b.pq=g.cap; save(); } S.view="pqEnd"; }
+  if(g.si<SC.length-1){ g.si++; g.node="a"; g.ctx={}; g.out=null; }
+  else { sWin(); const b=B(), n=noteOf(g); g.rec = b.note==null || n>b.note; if(g.rec){ b.note=n; save(); } S.view="pqEnd"; }
 }
 function vPQEnd(){
-  const g=S.pq, SC=D().sc, c=g.cap, rk = c>=400?"Expert de la session" : c>=280?"Fin analyste" : c>=200?"Joueur prudent" : "Apprenti";
+  const g=S.pq, SC=D().sc, n=noteOf(g), rk = n>=18?"Expert de la session" : n>=14?"Fin analyste" : n>=10?"Joueur prudent" : "Apprenti", best=g.hist.filter(x=>x.p===4).length;
   app.innerHTML = `
   <section class="panel"><span class="eyebrow">${D().sim.name} · bilan</span>
-  <div class="row"><div><div class="big">${c} $</div><span class="muted">capital final (départ : 200 $)</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div><div><div class="big">${g.hist.filter(x=>x.ok).length} / ${SC.length}</div><span class="muted">bons choix</span></div></div>
-  <p>${g.rec ? "C'est ton record." : "Record à battre : "+B().pq+" $."} Certains résultats dépendent du hasard : rejoue, les situations ne tourneront pas pareil.</p>
-  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i].ok?"oui":g.hist[i].d<0?"non":""}">${g.hist[i].ok?"✓ ":""}${sgn(g.hist[i].d)}</b></div>`).join("")}
+  <div class="row"><div><div class="big">${fmtN(n)}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div><div><div class="big">${best} / ${SC.length}</div><span class="muted">meilleurs choix</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtN(B().note)+" / 20."} La note juge tes décisions, pas la chance : un pari qui a payé ne vaut pas un bon choix.</p>${sessBox()}
+  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i].p===4?"oui":g.hist[i].p===0?"non":""}">${g.hist[i].p} / 4</b></div>`).join("")}
   <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="pqStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>`;
 }
 
@@ -1016,7 +1043,7 @@ function vCours(){
   const s=D(), N=s.notions;
   app.innerHTML = `
   <header class="stack"><span class="eyebrow">Session ${s.n} · Cours</span><h1>${s.title}</h1>
-  <p class="muted">Lis chaque notion et son exemple. Ensuite, passe aux tests : chaque mauvaise réponse te coûte des points, du temps ou de l'argent fictif.</p></header>
+  <p class="muted">Lis chaque notion et son exemple. Ensuite, passe aux tests : chaque mauvaise réponse fait baisser ta note, ton score ou ton temps.</p></header>
   <div class="stack" style="gap:8px">${N.map((n,k)=>`<div class="fiche"><span class="muted small">Notion ${k+1} / ${N.length}</span><b>${n[0]}</b><span>${n[1]}.</span><span class="muted small">Exemple : ${n[2]}.</span></div>`).join("")}</div>
   <button class="btn" data-act="coursDone">J'ai appris le cours, passer aux tests →</button>`;
 }
