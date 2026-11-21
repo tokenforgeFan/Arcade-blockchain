@@ -125,7 +125,6 @@ input.search{width:100%;box-sizing:border-box;background:var(--surface);color:va
   <div class="bar">
     <button class="link" data-act="home" id="crumb" style="padding-left:0">Arcade-Blockchain</button>
     <span style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="pill" href="https://tokenforgefan.github.io/quiz-blockchain/" style="text-decoration:none">⛓ La Chaîne des Quiz</a>
       <button class="pill" data-act="snd" id="sbtn">Son : oui</button>
       <button class="pill" data-act="fiches" id="fbtn">Fiches</button>
     </span>
@@ -133,6 +132,8 @@ input.search{width:100%;box-sizing:border-box;background:var(--surface);color:va
   <main id="app" class="stack"></main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://tokenforgefan.github.io/chaine-des-quiz/commun.js"></script>
 <script>
 const SESSIONS=[]; const rnd = p => Math.random() < p;
 SESSIONS.push({id:"s1", n:1, title:"Introduction à la blockchain et au Web3", short:"Blockchain et Web3",
@@ -881,7 +882,15 @@ const sWin =()=>{ [523,659,784,1046].forEach((f,i)=>beep(f,.18,"sine",i*.11)); }
 const KEY="arcade-mooc-v1", app=document.getElementById("app");
 let S;
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S.best)); }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S.best)); }catch(e){} syncArcade(); }
+// ---- Classement de la communauté : envoi de la note /20 de chaque session (si connecté) ----
+const ARC = {me:null, sent:{}};
+async function syncArcade(){
+  if(!window.CDQ || !CDQ.sb || !ARC.me || !ARC.me.pseudo || !S) return;
+  for(const d of SESSIONS){ const b=S.best[d.id]; const n=b?sessNote(b):null;
+    if(n==null || ARC.sent[d.id]>=n) continue;
+    try{ const {error}=await CDQ.sb.rpc("submit_arcade",{p_session:d.id,p_note:n}); if(!error) ARC.sent[d.id]=n; }catch(e){} }
+}
 function shuffle(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const sgn = d => (d>0?"+":d<0?"−":"±")+Math.abs(d)+" $";
 const fmtT = t => { const s=Math.floor(t); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
@@ -908,7 +917,7 @@ function vHome(){
   <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn2,b.as].filter(x=>x!=null).length, sn=sessNote(b);
     return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
     ${sn!=null?`<span class="mono" style="font-weight:700;color:var(--gold)">${fmtN(sn)} / 20</span>`:`<span class="dots" aria-label="${done} test(s) sur 3 déjà notés">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span>`}</button>`; }).join("")}</div>
-  <p class="muted small">Évaluation pédagogique notée sur 20, aucun conseil en investissement. Tes records restent sur cet appareil.</p>`;
+  <p class="muted small">Évaluation pédagogique notée sur 20, aucun conseil en investissement. Tes records restent sur cet appareil${ARC.me&&ARC.me.pseudo?` et ta meilleure note de chaque session part au <a href="https://tokenforgefan.github.io/chaine-des-quiz/#classement?onglet=arcade">classement Arcade</a>`:` · <a href="${window.CDQ?CDQ.loginUrl():"#"}">Connecte-toi</a> pour entrer dans le classement`}.</p>`;
 }
 
 function sessBox(){
@@ -1104,6 +1113,7 @@ setInterval(()=>{
   }
 },100);
 start({});
+if(window.CDQ){ CDQ.menu("arcade"); CDQ.me().then(u=>{ ARC.me=u; if(S && S.view==="home") render(); syncArcade(); }); }
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 </script>
 
