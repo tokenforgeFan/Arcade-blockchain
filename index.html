@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Arcade-Blockchain</title>
-<meta name="theme-color" content="#2B3FD6">
+<meta name="theme-color" content="#e9780a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,26 +13,26 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} html,body{overscroll-behavior-y:none}</style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 </head>
 <body>
 <style>
 /* Layout : une colonne ; accueil = les 7 sessions ; chaque session = 3 jeux + fiches ; barre du haut fixe pour revenir et ouvrir les fiches. */
 :root{
-  --bg:#EEF1F6; --surface:#FFFFFF; --ink:#131A2B; --muted:#5A6478; --line:#D5DAE4;
-  --accent:#2B3FD6; --on-accent:#FFFFFF; --accent-soft:#E3E7FB;
+  --bg:#fff8f0; --surface:#FFFFFF; --ink:#14123b; --muted:#5c5a7a; --line:#f1e2cf;
+  --accent:#e9780a; --on-accent:#FFFFFF; --accent-soft:#fff0dc;
   --yes:#0E8A5F; --yes-bg:#DDF3EA; --no:#C8402F; --no-bg:#FBE4DF; --gold:#B7791F; --gold-bg:#FBF0DC;
-  --display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
-  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Plus Jakarta Sans","Trebuchet MS",sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0F1422; --surface:#182033; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2A344C;
-  --accent:#8C9BFF; --on-accent:#0F1422; --accent-soft:#232C4D;
+  --bg:#0f0d1f; --surface:#1a1733; --ink:#ece9ff; --muted:#a7a3c9; --line:#2d2850;
+  --accent:#ffa53a; --on-accent:#1a1206; --accent-soft:#3a2a17;
   --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark } }
 :root[data-theme="dark"]{
-  --bg:#0F1422; --surface:#182033; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2A344C;
-  --accent:#8C9BFF; --on-accent:#0F1422; --accent-soft:#232C4D;
+  --bg:#0f0d1f; --surface:#1a1733; --ink:#ece9ff; --muted:#a7a3c9; --line:#2d2850;
+  --accent:#ffa53a; --on-accent:#1a1206; --accent-soft:#3a2a17;
   --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark }
 
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
@@ -119,6 +119,13 @@ input.search{width:100%;box-sizing:border-box;background:var(--surface);color:va
 .fiche{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 @media (min-width:700px){ body{font-size:17px} .card{font-size:1.55rem;min-height:180px} .vf button{padding:24px 10px;font-size:1.5rem} .choice,.def{padding:16px} .chip{padding:11px 18px} }
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* Style La Chaîne des Quiz (violet et orange) */
+h1{letter-spacing:-.03em;font-weight:800}
+.panel,.game,.scard{border-radius:22px!important;box-shadow:0 14px 34px -26px rgba(200,110,10,.5)}
+.btn{border-radius:999px!important;box-shadow:0 10px 22px -12px var(--accent)}
+.scard .num{border-radius:14px;background:linear-gradient(150deg,#ffb547,var(--accent));color:#fff}
+.prog i,.prog>*{background:linear-gradient(90deg,#ff9214,#5b3df5)}
 </style>
 
 <div class="wrap">
@@ -912,7 +919,7 @@ function render(){
 
 function vHome(){
   app.innerHTML = `
-  <header class="stack"><h1>Arcade-<span class="oui">Blockchain</span></h1>
+  <header class="stack"><h1>Arcade-<span style="color:var(--accent)">Blockchain</span></h1>
   <p class="muted">Une évaluation par session : d'abord le cours, puis les tests notés — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
   <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn2,b.as].filter(x=>x!=null).length, sn=sessNote(b);
     return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
