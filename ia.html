@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Arcade-IA</title>
+<meta name="theme-color" content="#e9780a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arcade-IA">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} html,body{overscroll-behavior-y:none}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+</head>
+<body>
+<style>
+/* Layout : une colonne ; accueil = les 3 parties du cours IA ; chaque session = 3 jeux + fiches ; barre du haut fixe pour revenir et ouvrir les fiches. */
+:root{
+  --bg:#fff8f0; --surface:#FFFFFF; --ink:#14123b; --muted:#5c5a7a; --line:#f1e2cf;
+  --accent:#e9780a; --on-accent:#FFFFFF; --accent-soft:#fff0dc;
+  --yes:#0E8A5F; --yes-bg:#DDF3EA; --no:#C8402F; --no-bg:#FBE4DF; --gold:#B7791F; --gold-bg:#FBF0DC;
+  --display:"Plus Jakarta Sans","Trebuchet MS",sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f0d1f; --surface:#1a1733; --ink:#ece9ff; --muted:#a7a3c9; --line:#2d2850;
+  --accent:#ffa53a; --on-accent:#1a1206; --accent-soft:#3a2a17;
+  --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f0d1f; --surface:#1a1733; --ink:#ece9ff; --muted:#a7a3c9; --line:#2d2850;
+  --accent:#ffa53a; --on-accent:#1a1206; --accent-soft:#3a2a17;
+  --yes:#3CCB95; --yes-bg:#12352B; --no:#FF8370; --no-bg:#40201C; --gold:#E5B455; --gold-bg:#3A2E16; color-scheme:dark }
+
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{user-select:none;-webkit-user-select:none}
+.wrap{max-width:760px;margin:0 auto;padding-block:16px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.8rem,6vw,2.5rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.4rem;font-weight:700} h3{font-size:1.05rem;font-weight:500}
+p{margin:0}
+.oui{color:var(--yes)} .non{color:var(--no)} .muted{color:var(--muted)} .small{font-size:.9rem}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:6px 2px}
+.pill{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:inherit;color:var(--ink);cursor:pointer;font-weight:600}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:600;cursor:pointer;align-self:flex-start}
+.btn:hover{filter:brightness(1.08)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.sess{display:flex;flex-direction:column;gap:10px}
+.scard{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
+.scard:hover{border-color:var(--accent);transform:translateX(3px)}
+.scard .num{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-family:var(--mono);font-weight:700;font-size:1.1rem}
+.scard .tx{min-width:0;display:flex;flex-direction:column;gap:2px}
+.scard b{font-family:var(--display);font-size:1.15rem;line-height:1.2}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--gold)}
+.game{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:16px;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,border-color .15s}
+.game:hover{border-color:var(--accent);transform:translateY(-2px)}
+.game:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.game .g{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.game .g b{font-family:var(--display);font-size:1.2rem}
+.game .rec{flex:none;text-align:right;font-size:.82rem;color:var(--muted)}
+.game .rec b{display:block;font-family:var(--mono);font-size:1.05rem;color:var(--gold)}
+.tag{flex:none;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:.8rem}
+.tag.a{background:var(--yes-bg);color:var(--yes)} .tag.b{background:var(--accent-soft);color:var(--accent)} .tag.c{background:var(--no-bg);color:var(--no)} .tag.d{background:var(--gold-bg);color:var(--gold)}
+
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.hud{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.hud b{font-family:var(--mono);font-size:1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:28px 20px;min-height:150px;display:grid;place-items:center;text-align:center;
+  font-family:var(--display);font-size:1.35rem;font-weight:500;line-height:1.3;text-wrap:balance}
+.vf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vf button{border:0;border-radius:14px;padding:18px 10px;font-family:var(--display);font-size:1.3rem;font-weight:700;cursor:pointer}
+.vf .f{background:var(--no-bg);color:var(--no)} .vf .v{background:var(--yes-bg);color:var(--yes)}
+.fb{border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.fb.ok{background:var(--yes-bg)} .fb.ko{background:var(--no-bg)} .fb.ne{background:var(--accent-soft)}
+.fb .res{font-family:var(--mono);font-weight:700} .fb.ok .res{color:var(--yes)} .fb.ko .res{color:var(--no)} .fb.ne .res{color:var(--accent)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip:disabled{opacity:.4;text-decoration:line-through;cursor:default}
+.def{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;color:inherit;cursor:pointer}
+.def:not(:disabled):hover{border-color:var(--accent)}
+.def.done{background:var(--yes-bg);border-color:var(--yes);cursor:default}
+.def.bad{background:var(--no-bg);border-color:var(--no)}
+.def b{color:var(--yes)}
+
+.mkt{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mkt div{border-radius:12px;padding:12px;text-align:center;font-weight:600}
+.mkt .o{background:var(--yes-bg);color:var(--yes)} .mkt .n{background:var(--no-bg);color:var(--no)} .mkt .z{background:var(--accent-soft);color:var(--accent)}
+.mkt b{display:block;font-family:var(--mono);font-size:1.45rem;overflow-wrap:anywhere}
+.choice{display:flex;justify-content:space-between;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:14px;font:inherit;font-weight:600;color:inherit;cursor:pointer}
+.choice:hover{border-color:var(--accent)}
+.choice span{font-family:var(--mono);font-weight:500;font-size:.85rem;color:var(--muted);flex:none}
+.big{font-family:var(--mono);font-size:2.3rem;font-weight:700;line-height:1}
+.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end}
+.line{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px}
+.line>span:first-child{min-width:0}
+.miss{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:2px;font-size:.94rem}
+input.search{width:100%;box-sizing:border-box;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+.fiche{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+@media (min-width:700px){ body{font-size:17px} .card{font-size:1.55rem;min-height:180px} .vf button{padding:24px 10px;font-size:1.5rem} .choice,.def{padding:16px} .chip{padding:11px 18px} }
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* Style La Chaîne des Quiz (violet et orange) */
+h1{letter-spacing:-.03em;font-weight:800}
+.panel,.game,.scard{border-radius:22px!important;box-shadow:0 14px 34px -26px rgba(200,110,10,.5)}
+.btn{border-radius:999px!important;box-shadow:0 10px 22px -12px var(--accent)}
+.scard .num{border-radius:14px;background:linear-gradient(150deg,#ffb547,var(--accent));color:#fff}
+.prog i,.prog>*{background:linear-gradient(90deg,#ff9214,#5b3df5)}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <button class="link" data-act="home" id="crumb" style="padding-left:0">Arcade-IA</button>
+    <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="pill" data-act="snd" id="sbtn">Son : oui</button>
+      <button class="pill" data-act="fiches" id="fbtn">Fiches</button>
+    </span>
+  </div>
+  <main id="app" class="stack"></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://tokenforgefan.github.io/chaine-des-quiz/commun.js"></script>
+<script>
+const SESSIONS=[]; const rnd = p => Math.random() < p;
+SESSIONS.push({id:"ia1", n:1, title:"Qu'est-ce que l'IA ?", short:"Qu'est-ce que l'IA",
+sim:{name:"Le Labo", tag:"SIM", desc:"Tu conseilles des entreprises qui veulent « faire de l'IA ». Cinq demandes : à toi de reconnaître ce qui est faisable, utile ou illusoire."},
+notions:[
+ ["IA spécialisée (ANI)", "Une IA conçue pour une seule tâche précise", "Un filtre antispam ou une enceinte connectée"],
+ ["IA générale (AGI)", "Une IA capable de toutes les tâches intellectuelles d'un humain", "Elle n'existe pas encore"],
+ ["Apprentissage supervisé", "Apprendre à associer une entrée A à une sortie B à partir d'exemples", "Une photo de la route en entrée, la position des voitures en sortie"],
+ ["Entrée A", "Ce que l'on donne au système", "L'e-mail reçu"],
+ ["Sortie B", "Ce que le système doit prédire", "« Spam » ou « pas spam »"],
+ ["Jeu de données", "L'ensemble des exemples qui servent à apprendre", "Des milliers d'e-mails déjà triés"],
+ ["Étiquette", "La bonne réponse B associée à un exemple", "« Voiture » sur une photo"],
+ ["Données structurées", "Des données rangées dans un tableau à colonnes", "Les ventes hebdomadaires de scooters"],
+ ["Données non structurées", "Images, sons ou texte libre, sans tableau", "Le son du moteur d'un scooter"],
+ ["Machine learning", "Un logiciel qui apprend des données et tourne en continu", "Une appli qui estime le prix d'une maison"],
+ ["Data science", "Tirer des données des conclusions pour aider à décider", "Un diaporama : rénover fait gagner 15 %"],
+ ["Réseau de neurones", "Un empilement de petits calculs appelés neurones artificiels", "Prix, port et marketing en entrée, demande en sortie"],
+ ["Deep learning", "Du machine learning avec des réseaux de neurones à nombreuses couches", "La reconnaissance faciale d'un téléphone"],
+ ["Neurone artificiel", "Une brique de calcul simple, comme un Lego", "Il relie le prix d'un t-shirt à la demande"],
+ ["Pixel", "Un point d'image codé par des nombres de luminosité", "Trois valeurs par pixel en couleur : rouge, vert, bleu"],
+ ["Entrepôt de données unifié", "Toutes les données de l'entreprise réunies au même endroit", "Les ventes et les réclamations analysables ensemble"],
+ ["Acquisition stratégique de données", "Collecter dès aujourd'hui les données utiles à long terme", "Un service gratuit qui fournit des données"],
+ ["Test A/B", "Comparer deux versions pour garder celle qui marche le mieux", "Bouton rouge contre bouton vert"],
+ ["Règle de la seconde", "Ce qu'un humain fait en une seconde, l'IA peut souvent l'apprendre", "Dire si une personne sourit"],
+ ["Robustesse", "Garder ses performances quand les données changent", "Radiographies d'un autre appareil"]
+],
+vf:[
+ ["Un filtre antispam est un exemple d'IA générale.",false,"C'est une IA spécialisée (ANI) : une seule tâche."],
+ ["L'IA générale (AGI) existe déjà dans certains laboratoires.",false,"Les progrès de l'IA spécialisée ne signifient pas que l'AGI soit là."],
+ ["L'apprentissage supervisé associe une entrée A à une sortie B.",true,"C'est la technique qui crée le plus de valeur aujourd'hui."],
+ ["Avec beaucoup de données, un petit réseau égale toujours un grand réseau.",false,"Un petit réseau plafonne ; un grand réseau continue de progresser."],
+ ["Seul l'étiquetage manuel permet d'obtenir des données.",false,"On peut aussi observer des comportements ou utiliser des données existantes."],
+ ["Une photo est une donnée non structurée.",true,"Images, sons et texte libre sont non structurés."],
+ ["Un tableau des ventes est une donnée non structurée.",false,"Des lignes et des colonnes : c'est structuré."],
+ ["La data science livre souvent des conclusions sous forme de diaporama.",true,"Son but est d'aider des humains à décider."],
+ ["Le machine learning et la data science livrent exactement la même chose.",false,"ML = logiciel qui tourne ; data science = conclusions pour décider."],
+ ["Le deep learning est une partie du machine learning.",true,"Et le machine learning est une partie de l'IA."],
+ ["Tous les algorithmes d'IA sont du deep learning.",false,"C'est l'inverse : le deep learning n'est qu'une partie de l'IA."],
+ ["« Deep learning » et « réseau de neurones » sont presque synonymes.",true,"Les deux termes s'emploient aujourd'hui de façon interchangeable."],
+ ["Un réseau de neurones fonctionne comme un cerveau biologique.",false,"Le lien est très vague : c'est un calcul mathématique."],
+ ["Un magasin qui ouvre un site web devient une entreprise Internet.",false,"Il faut changer sa façon de travailler, pas seulement ajouter un outil."],
+ ["Une entreprise d'IA réunit ses données dans un entrepôt unifié.",true,"Des données éparpillées entre services sont difficiles à exploiter."],
+ ["Dire si une personne sourit est une tâche probablement faisable pour l'IA.",true,"Un humain le fait en une seconde, et les photos étiquetées ne manquent pas."],
+ ["Écrire seule un rapport de marché de 50 pages est facile pour l'IA actuelle.",false,"C'est une tâche longue et complexe, hors de portée aujourd'hui."],
+ ["10 000 vidéos suffisent pour comprendre tous les gestes humains.",false,"Les gestes sont trop variés : le cours conclut que cela ne suffit pas."],
+ ["Une IA reste fiable sur des données très différentes de son entraînement.",false,"Elle est peu robuste : ses performances chutent."],
+ ["L'IA apprend aussi bien qu'un médecin avec 10 images et un manuel.",false,"Elle a besoin de milliers d'exemples étiquetés."],
+ ["Pour un ordinateur, une image est une grille de nombres.",true,"Une valeur de luminosité par pixel, trois en couleur."],
+ ["Les premières couches d'un réseau de vision détectent les contours.",true,"Puis les parties du visage, puis le visage entier."],
+ ["Il faut dire au réseau de chercher un œil pour reconnaître un visage.",false,"Il découvre seul ce qu'il doit détecter à partir des exemples."],
+ ["Les médias parlent autant des échecs de l'IA que de ses succès.",false,"Ils montrent surtout les succès, d'où des attentes parfois irréalistes."]
+],
+sc:[
+ {t:"Le patron enthousiaste", c:"ANI ou AGI", q:"Un PDG veut « une IA qui gère toute l'entreprise comme un humain, d'ici six mois ».", facts:[["Délai", "6 mois"], ["Données", "ventes, e-mails"]],
+  lesson:"L'IA d'aujourd'hui est spécialisée : elle excelle sur une tâche précise. Une IA qui ferait tout comme un humain, c'est l'AGI, qui n'existe pas. La bonne réponse est de proposer des tâches précises, comme trier les e-mails clients.",
+  nodes:{a:{x:"Il est prêt à signer un gros budget dès demain.", ch:[
+   {l:"Refuser tout projet d'IA", f:()=>({d:0,r:"Pas de déception, mais pas de progrès non plus : une tâche simple aurait pu être automatisée."})},
+   {l:"Accepter et promettre l'IA générale", f:()=>({d:0,r:"Six mois plus tard, rien ne fonctionne comme promis. Le budget est brûlé et l'IA perd sa crédibilité dans l'entreprise."})},
+   {l:"Proposer une tâche précise : trier les e-mails clients", f:()=>({d:0,r:"Le tri automatique marche en quelques mois. Le PDG voit un résultat concret et demande la suite."})}]}}},
+ {t:"Le sourire du client", c:"La règle de la seconde", q:"Une chaîne de magasins veut savoir si les clients sourient en sortant, à partir des images d'une caméra.", facts:[["Photos étiquetées", "50 000"], ["Tâche humaine", "< 1 s"]],
+  lesson:"Une tâche qu'un humain fait en une seconde, avec beaucoup d'exemples étiquetés, est un bon candidat pour l'apprentissage supervisé. (Dans la vraie vie, il faudrait aussi vérifier que filmer et analyser les clients respecte la loi et leur consentement.)",
+  nodes:{a:{x:"Tu as déjà 50 000 photos de visages étiquetées « sourire » ou « pas sourire ».", ch:[
+   {l:"C'est faisable : apprentissage supervisé", s:"A = image, B = sourire ou pas", f:()=>({d:0,r:"Exactement. Concept simple, beaucoup de données : le modèle apprend vite. Reste à vérifier le cadre légal de l'usage des images."})},
+   {l:"Impossible : l'IA ne comprend pas les émotions", f:()=>({d:0,r:"Trop pessimiste. Reconnaître un sourire est une tâche visuelle simple, pas une compréhension profonde des émotions."})}]}}},
+ {t:"La réponse aux réclamations", c:"Limites de l'IA", q:"Un site de jouets veut une IA qui écrive seule des réponses chaleureuses et personnalisées aux clients mécontents.", facts:[["Exemples de réponses", "1 000"], ["Ton attendu", "empathique"]],
+  lesson:"Rédiger une réponse empathique adaptée à chaque situation est une tâche complexe, et 1 000 exemples sont très loin du compte. Classer les e-mails par motif (retard, remboursement) est en revanche réaliste.",
+  nodes:{a:{x:"Tu disposes de 1 000 échanges clients avec leur réponse.", ch:[
+   {l:"Attendre d'avoir 10 000 exemples", f:()=>({d:0,r:"Même avec 10 ou 100 000 exemples, le cours note que la tâche reste un défi. Pendant ce temps, rien n'est automatisé."})},
+   {l:"Automatiser le tri des e-mails et garder des réponses humaines", f:()=>({d:0,r:"Chaque e-mail arrive au bon service en un instant et les conseillers gardent le ton juste. Gain rapide et sans risque."})},
+   {l:"Lancer la génération automatique des réponses", f:()=>({d:0,r:"L'IA produit des formules génériques, parfois hors sujet. Un client dont le cadeau est arrivé trop tard reçoit « Merci pour votre e-mail »."})}]}}},
+ {t:"Le nouvel hôpital", c:"Robustesse aux données", q:"Un modèle qui détecte la pneumonie, entraîné dans un grand centre médical, doit être installé dans un petit hôpital aux appareils plus anciens.", facts:[["Précision au centre", "95 %"], ["Appareils", "plus anciens"]],
+  lesson:"Une IA fonctionne bien sur des données semblables à celles de son entraînement. Avant de déployer ailleurs, on teste sur les nouvelles données et on complète l'entraînement si besoin.",
+  nodes:{a:{x:"Le fournisseur affirme que la précision de 95 % sera la même partout.", ch:[
+   {l:"Déployer directement", f:()=>({d:0,r:"Sur des clichés mal cadrés et de moins bonne qualité, le modèle se trompe bien plus souvent. Des médecins perdent confiance."})},
+   {l:"Tester d'abord sur des radios du petit hôpital", f:()=>({d:0,r:"Le test révèle une baisse nette. On ajoute des images locales à l'entraînement avant la mise en service : bonne décision."})}]}}},
+ {t:"L'appli des t-shirts", c:"Réseau de neurones et données", q:"Ton site de t-shirts veut prédire la demande. Ton associé veut écrire lui-même les règles : « si le port dépasse 5 €, la demande baisse de 20 % »…", facts:[["Historique", "3 ans de ventes"], ["Facteurs", "prix, port, pub, matière"]],
+  lesson:"Un réseau de neurones découvre seul les relations utiles (abordabilité, notoriété, qualité perçue) à partir des exemples. On lui fournit A (prix, port, marketing, matière) et B (ventes réelles), pas les règles.",
+  nodes:{a:{x:"Tu as trois ans d'historique : prix, frais de port, budget pub, matière et ventes.", ch:[
+   {l:"Écrire les règles à la main", f:()=>({d:0,r:"Les règles fonctionnent pour les cas prévus et ratent les autres. C'est exactement le travail qu'un réseau de neurones fait mieux à partir des données."})},
+   {l:"Demander d'abord une analyse de data science", f:()=>({d:0,r:"L'analyse donne des idées utiles pour fixer les prix, mais ne livre pas un outil de prévision automatique. Acceptable, pas optimal."})},
+   {l:"Entraîner un modèle sur l'historique", f:()=>({d:0,r:"Le modèle apprend des relations que personne n'avait formulées, et ses prévisions battent les règles écrites à la main."})}]}}}
+]});
+
+SESSIONS.push({id:"ia2", n:2, title:"Mener un projet d'IA", short:"Mener un projet d'IA",
+sim:{name:"Le Comité projet", tag:"SIM", desc:"Tu présides le comité qui valide les projets d'IA d'une PME de tasses à café. Cinq dossiers arrivent sur ta table."},
+notions:[
+ ["Collecte de données", "Rassembler des exemples A et leurs sorties B", "Enregistrer des gens qui disent « Alexa »"],
+ ["Entraînement", "L'algorithme ajuste ses calculs pour passer de A à B", "Il apprend à entourer les voitures sur une image"],
+ ["Déploiement", "Mettre le modèle en service dans un vrai produit", "Installer le modèle dans l'enceinte"],
+ ["Itération", "Essayer, mesurer, corriger, recommencer", "La première version confond les mots"],
+ ["Maintenance", "Mettre à jour le modèle avec les nouveaux cas", "Ajouter des accents britanniques"],
+ ["Hypothèse", "Une explication à tester à partir de l'analyse", "Les frais de port font fuir les clients"],
+ ["Moteur de valeur", "Ce qui crée le plus de valeur dans l'activité", "Plus de visiteurs qui finalisent l'achat"],
+ ["Équipe interfonctionnelle", "Experts de l'IA et experts du métier réunis", "Ingénieur ML et responsable des ventes"],
+ ["Automatiser une tâche", "Confier à l'IA une partie précise d'un métier", "Le routage des appels d'un centre d'appels"],
+ ["Diligence technique", "Vérifier que l'IA peut atteindre l'objectif", "Une précision de 95 % est-elle atteignable ?"],
+ ["Diligence commerciale", "Vérifier que le projet crée de la valeur", "Un tableur des économies attendues"],
+ ["Construire ou acheter", "Développer en interne ou utiliser une solution existante", "On n'assemble pas son propre routeur Wi-Fi"],
+ ["Analogie du train", "Ne pas rivaliser avec une solution standard en marche", "Un grand acteur développe déjà la même chose"],
+ ["Critère d'acceptation", "L'objectif mesurable que le système doit atteindre", "95 % des défauts de tasses détectés"],
+ ["Ensemble d'apprentissage", "Les exemples étiquetés qui servent à apprendre", "Des photos de tasses « OK » ou « défectueuse »"],
+ ["Ensemble de test", "Des exemples différents pour mesurer la performance", "3 tasses : 2 bien classées = 66,7 %"],
+ ["Données ambiguës", "Des cas où les experts eux-mêmes ne sont pas d'accord", "Une rayure minuscule : OK ou pas ?"],
+ ["GPU", "Le processeur qui entraîne vite les grands réseaux", "Né pour les jeux vidéo"],
+ ["Cloud", "Louer de la puissance de calcul à distance", "AWS, Azure ou GCP"],
+ ["Périphérie (edge)", "Calculer directement sur l'appareil", "Le processeur embarqué d'une voiture"]
+],
+vf:[
+ ["La première idée d'une équipe d'IA fonctionne en général du premier coup.",false,"Le ML est itératif : on essaie souvent de nombreuses idées."],
+ ["Un projet de ML suit trois étapes : collecter, entraîner, déployer.",true,"Avec des itérations à chaque étape."],
+ ["Une fois déployé, un modèle n'a plus besoin d'être mis à jour.",false,"Les nouveaux cas (accents, véhicules rares) imposent des mises à jour."],
+ ["La data science propose des hypothèses et des actions à partir des données.",true,"Puis elle vérifie leur effet avec de nouvelles données."],
+ ["Trier automatiquement des CV relève de la data science.",false,"C'est du machine learning, avec une vigilance sur les biais."],
+ ["Un test A/B compare deux versions pour garder la meilleure.",true,"Un outil classique de data science en marketing."],
+ ["Le désherbage de précision repère les mauvaises herbes sur des photos.",true,"Et ne pulvérise qu'à ces endroits."],
+ ["Les meilleurs projets sont ceux que l'IA sait faire ET qui ont de la valeur.",true,"L'intersection des deux cercles."],
+ ["Il vaut mieux automatiser un métier entier qu'une tâche précise.",false,"C'est l'inverse : on automatise des tâches."],
+ ["Sans big data, aucun projet de machine learning n'est possible.",false,"On démarre souvent avec 100 à 1 000 exemples."],
+ ["La diligence technique vérifie si l'objectif de précision est atteignable.",true,"Ainsi que les données, le temps et les personnes nécessaires."],
+ ["La diligence commerciale vérifie la faisabilité technique.",false,"Elle vérifie que le projet crée de la valeur."],
+ ["Il faut aussi se demander si le projet est bon pour la société.",true,"C'est l'étude éthique."],
+ ["Il vaut mieux reconstruire soi-même une solution standard du marché.",false,"On achète le standard et on construit ce qui est unique."],
+ ["La data science se fait le plus souvent en interne.",true,"Elle exige une connaissance fine de l'entreprise."],
+ ["Un critère d'acceptation est un objectif mesurable.",true,"Par exemple 95 % de précision."],
+ ["L'ensemble de test doit être identique à l'ensemble d'apprentissage.",false,"Il doit être différent pour mesurer honnêtement."],
+ ["2 tasses bien classées sur 3 donnent 66,7 % de précision.",true,"2 ÷ 3 ≈ 66,7 %."],
+ ["Viser 100 % de précision est toujours réaliste.",false,"Données insuffisantes, étiquettes fausses et ambiguïtés l'empêchent."],
+ ["Corriger les étiquettes fausses peut améliorer la précision.",true,"Nettoyer les données est souvent rentable."],
+ ["TensorFlow et PyTorch sont des bibliothèques open source de machine learning.",true,"Elles évitent de tout coder de zéro."],
+ ["arXiv est un site où l'on publie gratuitement des articles de recherche.",true,"Les avancées y circulent vite."],
+ ["Le GPU a été conçu à l'origine pour les tableurs.",false,"Pour les graphismes, notamment les jeux vidéo."],
+ ["Calculer en périphérie permet de réagir plus vite.",true,"Pas d'aller-retour avec le cloud."]
+],
+sc:[
+ {t:"Le projet impossible", c:"Automatiser des tâches, pas des métiers", q:"Le directeur commercial veut « une IA qui remplace toute l'équipe de vente ».", facts:[["Commerciaux", "12"], ["Prospects par mois", "3 000"]],
+  lesson:"On automatise des tâches précises, pas des métiers. Prioriser les prospects est une tâche A → B bien définie ; négocier, convaincre et suivre un client reste humain.",
+  nodes:{a:{x:"Tu listes les tâches des commerciaux : trier les prospects, appeler, négocier, relancer.", ch:[
+   {l:"Automatiser le tri des prospects", f:()=>({d:0,r:"Les commerciaux appellent d'abord les prospects prometteurs. Le taux de conversion monte sans toucher au cœur du métier."})},
+   {l:"Faire une analyse data science des ventes", f:()=>({d:0,r:"Utile pour comprendre ce qui marche, mais rien n'est automatisé. Bon choix, pas le meilleur."})},
+   {l:"Lancer le remplacement de toute l'équipe", f:()=>({d:0,r:"Le projet s'enlise : l'IA ne sait pas négocier ni bâtir une relation. Les clients partent, l'équipe est démotivée."})}]}}},
+ {t:"Le manque de données", c:"Pas besoin de big data", q:"L'atelier veut détecter automatiquement les tasses rayées, mais n'a que 800 photos.", facts:[["Photos étiquetées", "800"], ["Idéal", "1 million"]],
+  lesson:"On peut souvent démarrer avec 100 à 1 000 images pour une inspection visuelle. Plus de données aide toujours, mais leur manque ne doit pas bloquer. L'expert en IA dit de combien le projet a besoin.",
+  nodes:{a:{x:"Un consultant affirme qu'il faut un million de photos avant de commencer.", ch:[
+   {l:"Démarrer avec 800 photos et enrichir au fil de l'eau", f:()=>({d:0,r:"Le premier modèle détecte déjà la plupart des rayures. Chaque mois, de nouvelles photos l'améliorent."})},
+   {l:"Abandonner le projet", f:()=>({d:0,r:"Les tasses rayées continuent de partir chez les clients. Un premier modèle aurait pu marcher avec tes 800 photos."})}]}}},
+ {t:"La reconnaissance vocale maison", c:"Construire ou acheter", q:"Ton équipe veut développer de zéro un logiciel de reconnaissance vocale pour la prise de commandes par téléphone.", facts:[["Solutions du marché", "plusieurs"], ["Budget équipe", "limité"]],
+  lesson:"Achète ce qui est standard et réserve tes ressources limitées à ce qui t'est propre. Ne cours pas devant un train : les grands acteurs améliorent leurs solutions plus vite que toi.",
+  nodes:{a:{x:"Des solutions standards de reconnaissance vocale existent déjà et s'améliorent chaque année.", ch:[
+   {l:"Tout développer en interne", f:()=>({d:0,r:"Un an et beaucoup d'argent plus tard, ton système reste moins bon que les solutions du marché, qui ont continué d'avancer."})},
+   {l:"Tout externaliser, y compris ce qui est propre à ton métier", f:()=>({d:0,r:"Ça marche vite, mais ton savoir-faire reste chez le prestataire. Acceptable à court terme."})},
+   {l:"Acheter la reconnaissance vocale, construire ce qui est propre à tes commandes", f:()=>({d:0,r:"Tu branches une solution standard et ton équipe se concentre sur la compréhension de tes références produits. Livré en quelques semaines."})}]}}},
+ {t:"Le cahier des charges", c:"Critère d'acceptation et données", q:"Tu confies l'inspection des tasses à une équipe d'IA. Que lui donnes-tu ?", facts:[["Défauts visés", "rayures, bosses"], ["Photos", "10 000"]],
+  lesson:"Un critère d'acceptation mesurable (par exemple 95 %), un ensemble d'apprentissage et un ensemble de test différent permettent de savoir si le système est prêt. 100 % est irréaliste : étiquettes fausses et cas ambigus l'empêchent.",
+  nodes:{a:{x:"L'équipe te demande un objectif et des données.", ch:[
+   {l:"« Faites au mieux » + toutes les photos en vrac", f:()=>({d:0,r:"Sans objectif ni ensemble de test séparé, personne ne sait si le système est assez bon."})},
+   {l:"« 95 % » + 9 000 photos pour apprendre + 1 000 autres pour tester", f:()=>({d:0,r:"Objectif clair et mesurable. Au bout de quelques itérations, le système atteint 95 % sur l'ensemble de test et part en production."})},
+   {l:"« Zéro erreur, 100 % de précision »", f:()=>({d:0,r:"L'équipe ne peut jamais valider le projet : certaines rayures sont jugées différemment par tes propres experts. Le projet tourne en rond."})}]}}},
+ {t:"Le freinage d'urgence", c:"Cloud, sur site ou périphérie", q:"Un client fabrique des chariots autonomes pour entrepôt. Où faire tourner la détection d'obstacles ?", facts:[["Temps de réaction", "quelques ms"], ["Wi-Fi de l'entrepôt", "instable"]],
+  lesson:"Quand il faut réagir en temps réel, on calcule en périphérie, sur l'appareil. Le cloud reste utile pour entraîner les modèles et analyser les données après coup.",
+  nodes:{a:{x:"Le Wi-Fi coupe parfois quelques secondes dans les allées.", ch:[
+   {l:"Calculer dans le chariot (edge), entraîner dans le cloud", f:()=>({d:0,r:"Le chariot freine en millisecondes même sans réseau, et les images remontent plus tard pour améliorer le modèle."})},
+   {l:"Envoyer chaque image au cloud", f:()=>({d:0,r:"Une coupure Wi-Fi et le chariot ne voit plus l'obstacle à temps. Inacceptable pour la sécurité."})}]}}}
+]});
+
+SESSIONS.push({id:"ia3", n:3, title:"L'IA dans l'entreprise", short:"L'IA dans l'entreprise",
+sim:{name:"La Transformation", tag:"SIM", desc:"Tu es nommé responsable IA d'un fabricant d'enceintes connectées. Cinq décisions pour transformer l'entreprise sans tomber dans les pièges."},
+notions:[
+ ["Mot de réveil", "La phrase qui active l'enceinte : détectée ou non", "« Hey terminal »"],
+ ["Reconnaissance vocale", "Transformer l'audio en texte", "« raconte-moi une blague » devient du texte"],
+ ["Reconnaissance d'intention", "Comprendre ce que l'utilisateur veut faire", "« fais-moi rire » = blague"],
+ ["Perception", "Repérer les objets autour de la voiture", "Caméras et LIDAR détectent un piéton"],
+ ["Planification de trajectoire", "Choisir un chemin et une vitesse sûrs", "Contourner une voiture garée"],
+ ["LIDAR", "Un capteur laser qui mesure les distances en 3D", "Il confirme la distance d'un piéton"],
+ ["Ingénieur logiciel", "Écrit le code qui entoure les modèles", "Le module qui lit la blague"],
+ ["Ingénieur ML", "Construit et entraîne les modèles A → B", "Le détecteur de mot de réveil"],
+ ["Chercheur ML", "Fait avancer l'état de l'art avec de nouveaux algorithmes", "Une meilleure prédiction des piétons"],
+ ["Ingénieur de la donnée", "Stocke et organise de grands volumes de données", "Des gigaoctets de capteurs par minute"],
+ ["Chef de produit IA", "Décide quoi construire selon le faisable et l'utile", "Choisir les commandes prioritaires"],
+ ["Projet pilote", "Un premier projet qui réussit vite et crée de l'élan", "Résultats visibles en 6 à 12 mois"],
+ ["Équipe IA centralisée", "Une équipe commune qui travaille avec chaque service", "Un modèle vocal partagé par plusieurs produits"],
+ ["Cycle vertueux", "Meilleur produit, plus d'utilisateurs, plus de données", "Blue River et les photos de cultures"],
+ ["Indicateur adapté (KPI)", "Un objectif de progrès plutôt qu'une date de perfection", "De 80 % à 90 % de commandes reconnues"],
+ ["Apprentissage non supervisé", "Trouver des groupes sans étiquettes", "Étudiants et actifs dans les achats de chips"],
+ ["Apprentissage par transfert", "Réutiliser un modèle appris sur une tâche voisine", "Des voitures aux voiturettes de golf"],
+ ["Apprentissage par renforcement", "Apprendre par récompenses et pénalités", "AlphaGo, un hélicoptère autonome"],
+ ["GAN", "Deux réseaux s'affrontent pour générer des données réalistes", "Des visages qui n'existent pas"],
+ ["Graphe de connaissances", "Relier des entités et leurs attributs", "Le panneau Léonard de Vinci de Google"]
+],
+vf:[
+ ["Une enceinte détecte le mot de réveil avant de transcrire la commande.",true,"Réveil → vocal → intention → exécution."],
+ ["Lire une blague demande un réseau de neurones géant.",false,"C'est du code logiciel classique."],
+ ["Pour un minuteur, l'IA doit aussi extraire la durée demandée.",true,"Intention + information utile."],
+ ["La détection des piétons repose surtout sur l'apprentissage par renforcement.",false,"Sur l'apprentissage supervisé, avec des images annotées."],
+ ["La planification décide du chemin et de la vitesse.",true,"Après la perception et la prédiction."],
+ ["Une voiture autonome n'utilise qu'une caméra.",false,"Caméras, LIDAR, radar, GPS, capteurs de mouvement…"],
+ ["Le radar aide à voir sous la pluie et dans le brouillard.",true,"Il complète les caméras par mauvais temps."],
+ ["Les ingénieurs logiciels représentent souvent la moitié d'une équipe d'IA ou plus.",true,"Ils construisent tout ce qui entoure les modèles."],
+ ["Le chef de produit IA entraîne lui-même les modèles.",false,"Il décide quoi construire."],
+ ["Un chercheur ML est indispensable pour un premier détecteur de mot de réveil.",false,"Un ingénieur ML suffit."],
+ ["Dans une petite équipe, une personne peut cumuler plusieurs rôles.",true,"Code, modèle et analyse."],
+ ["La première étape du plan est d'écrire la stratégie IA.",false,"Ce sont les projets pilotes ; la stratégie vient en 4e."],
+ ["Le premier projet pilote doit surtout réussir et créer de l'élan.",true,"Même s'il n'est pas le plus rentable."],
+ ["Un projet pilote peut être confié à un prestataire extérieur.",true,"Si l'expertise interne manque."],
+ ["Les dirigeants ont besoin d'environ 100 heures de formation à l'IA.",false,"Environ 4 h ; les ingénieurs, environ 100 h."],
+ ["Les cinq étapes du plan se chevauchent souvent.",true,"La formation peut commencer avec les premiers pilotes."],
+ ["Le cycle vertueux : meilleur produit, plus d'utilisateurs, plus de données.",true,"Et donc un produit encore meilleur."],
+ ["La communication externe vise aussi les régulateurs.",true,"Surtout dans la santé et les transports."],
+ ["Il faut attendre des superstars de l'IA pour commencer.",false,"Des ingénieurs formés en ligne suffisent pour démarrer."],
+ ["Un planning classique s'applique tel quel aux projets d'IA.",false,"Il faut des jalons et des indicateurs adaptés à l'itération."],
+ ["Le clustering est une technique d'apprentissage non supervisé.",true,"Il trouve des groupes sans étiquettes."],
+ ["L'apprentissage par transfert demande plus de données que l'apprentissage de zéro.",false,"Il permet justement d'en utiliser beaucoup moins."],
+ ["AlphaGo a appris grâce à l'apprentissage par renforcement.",true,"Des récompenses pour les victoires."],
+ ["Un GAN sert surtout à détecter les piétons.",false,"Il génère des données réalistes."]
+],
+sc:[
+ {t:"Le premier projet", c:"Projets pilotes", q:"Le PDG te demande par quoi commencer. Trois idées sur la table.", facts:[["Délai visé", "6 à 12 mois"], ["Expertise interne", "faible"]],
+  lesson:"Le premier pilote doit réussir et montrer un résultat concret en 6 à 12 mois, même s'il n'est pas le plus rentable. Il sert à prendre de l'élan et gagner la confiance des équipes.",
+  nodes:{a:{x:"Idées : comprendre toutes les langues du monde, mieux détecter le mot de réveil dans le bruit, ou écrire d'abord une stratégie IA de 80 pages.", ch:[
+   {l:"Écrire d'abord la stratégie IA", f:()=>({d:0,r:"Sans expérience concrète, le document reste vague (« collecter plus de données »). La stratégie vient en 4e étape."})},
+   {l:"Mieux détecter le mot de réveil dans le bruit", f:()=>({d:0,r:"Résultat mesurable en quelques mois. Les équipes voient que l'IA marche et proposent d'autres projets."})},
+   {l:"Une enceinte qui comprend toutes les langues", f:()=>({d:0,r:"Projet démesuré : au bout d'un an, rien n'est livrable et la direction doute de l'IA."})}]}}},
+ {t:"Le recrutement", c:"Les rôles d'une équipe", q:"Tu as le budget pour un premier recrutement afin de construire le détecteur de mot de réveil.", facts:[["Postes possibles", "1"], ["Besoin", "modèle A → B"]],
+  lesson:"L'ingénieur ML construit et entraîne les modèles A → B : c'est le profil du besoin. Le chercheur invente de nouveaux algorithmes, l'ingénieur de la donnée gère le stockage, le chef de produit décide quoi construire.",
+  nodes:{a:{x:"Quatre candidats sérieux, un seul poste.", ch:[
+   {l:"Un ingénieur ML", f:()=>({d:0,r:"Il entraîne un premier modèle en quelques semaines avec des outils open source. Exactement le besoin."})},
+   {l:"Un ingénieur de la donnée", f:()=>({d:0,r:"Il organise très bien les enregistrements audio, utile pour la suite, mais personne n'entraîne encore le modèle."})},
+   {l:"Un chercheur ML de renommée mondiale", f:()=>({d:0,r:"Brillant, mais il veut inventer de nouveaux algorithmes. Le détecteur avance lentement et coûte cher."})}]}}},
+ {t:"L'organisation", c:"Équipe IA centralisée", q:"Trois services (enceintes, appli mobile, service client) veulent tous de l'IA.", facts:[["Services demandeurs", "3"], ["Ingénieurs IA", "6"]],
+  lesson:"Une équipe IA centralisée, en matrice avec les unités et financée au départ par la direction, évite la dispersion et crée des outils réutilisables, comme un modèle vocal commun à plusieurs produits.",
+  nodes:{a:{x:"Comment répartir tes 6 ingénieurs IA ?", ch:[
+   {l:"Tout sous-traiter définitivement", f:()=>({d:0,r:"Les premiers projets avancent, mais l'entreprise ne construit aucune compétence propre."})},
+   {l:"Une équipe centrale qui travaille avec chaque service", f:()=>({d:0,r:"Un seul modèle vocal sert l'enceinte et l'appli. Chaque service a son interlocuteur, l'équipe partage ses outils."})},
+   {l:"Deux par service, chacun de son côté", f:()=>({d:0,r:"Trois équipes refont trois fois le même modèle vocal, sans partage ni carrière commune."})}]}}},
+ {t:"Le calendrier", c:"Les pièges à éviter", q:"Le directeur financier veut une date fixe : « reconnaissance vocale parfaite le 1er mars ».", facts:[["Précision actuelle", "80 %"], ["Horizon", "6 mois"]],
+  lesson:"Les projets d'IA sont itératifs et incertains. On fixe avec l'équipe des jalons et des indicateurs de progrès, comme passer de 80 % à 90 % de commandes reconnues en 6 mois, plutôt qu'une date de perfection.",
+  nodes:{a:{x:"L'équipe estime pouvoir gagner environ 10 points en six mois.", ch:[
+   {l:"Proposer l'objectif « de 80 % à 90 % en 6 mois »", f:()=>({d:0,r:"Objectif mesurable et réaliste. Le jalon est atteint, la direction suit les progrès mois par mois."})},
+   {l:"Accepter la date « perfection au 1er mars »", f:()=>({d:0,r:"Le 1er mars, la précision est à 89 % : très bon progrès, mais le projet est déclaré en échec."})}]}}},
+ {t:"La stratégie", c:"Cycle vertueux et niche", q:"Après deux pilotes réussis, il est temps de choisir une stratégie face aux géants de l'enceinte.", facts:[["Concurrents", "géants généralistes"], ["Atout", "écoles partenaires"]],
+  lesson:"Mieux vaut viser une niche et y lancer le cycle vertueux : meilleur produit → plus d'utilisateurs → plus de données → meilleur produit. Un capital de données spécifique devient une barrière difficile à franchir.",
+  nodes:{a:{x:"Option 1 : affronter les géants sur l'enceinte généraliste. Option 2 : une enceinte pour l'éducation. Option 3 : ne rien changer.", ch:[
+   {l:"Ne rien changer", f:()=>({d:0,r:"Tes pilotes ont prouvé la valeur de l'IA, mais sans stratégie l'avantage s'érode."})},
+   {l:"Affronter les géants sur le généraliste", f:()=>({d:0,r:"Ils ont plus de données et d'utilisateurs : leur cycle vertueux tourne plus vite que le tien."})},
+   {l:"Se spécialiser dans l'éducation", f:()=>({d:0,r:"Les écoles adoptent l'enceinte, les enregistrements d'élèves améliorent le modèle, qui attire encore plus d'écoles."})}]}}}
+]});
+
+
+/* Note du simulateur : points par choix (4 = meilleur choix, 2 = acceptable, 0 = mauvais). null = choix qui mène à une autre étape. */
+const SCORES={
+"ia1-0-a":[2, 0, 4],"ia1-1-a":[4, 0],"ia1-2-a":[2, 4, 0],"ia1-3-a":[0, 4],"ia1-4-a":[0, 2, 4],
+"ia2-0-a":[4, 2, 0],"ia2-1-a":[4, 0],"ia2-2-a":[0, 2, 4],"ia2-3-a":[0, 4, 0],"ia2-4-a":[4, 0],
+"ia3-0-a":[0, 4, 0],"ia3-1-a":[4, 2, 0],"ia3-2-a":[2, 4, 0],"ia3-3-a":[4, 0],"ia3-4-a":[0, 0, 4]
+};
+const PTS=["Mauvais choix","","Choix acceptable","","Meilleur choix"];
+const noteOf = g => { const n=D().sc.length; return Math.round(g.hist.reduce((a,x)=>a+x.p,0)/(4*n)*20*2)/2; };
+const fmtN = x => String(x).replace(".",",");
+/* Note des Paires : 0:50 ou moins = 20, puis 1 point de moins par tranche de 10 s (0:51–1:00 = 19, 1:01–1:10 = 18…), minimum 0. */
+const noteAS = s => s<=50 ? 20 : Math.max(0, 20-Math.ceil((s-50)/10));
+/* Note du Vrai ou Faux : (bonnes réponses − erreurs) ÷ nombre de réponses données, avec un minimum de 20 réponses attendues en 60 s.
+   20 justes sans erreur = 20/20 ; 15 justes sans erreur = 15/20 ; 18 justes et 2 erreurs = 16/20. */
+const VF_MIN=20;
+const noteVF = (ok,err) => Math.max(0, Math.min(20, Math.round((ok-err)/Math.max(ok+err,VF_MIN)*20*2)/2));
+const sessNote = b => (b.note!=null && b.vfn2!=null && b.as!=null) ? Math.round((b.note+b.vfn2+noteAS(b.as))/3*2)/2 : null;
+const mention = n => n>=16?"Très bien":n>=14?"Bien":n>=12?"Assez bien":n>=10?"Passable":"Insuffisant";
+
+
+SESSIONS.sort((a,b)=>a.n-b.n);
+
+let AC=null, SOUND=true;
+try{ SOUND = localStorage.getItem("arcade-son")!=="0"; }catch(e){}
+function beep(f,d,type,when){ if(!SOUND) return; try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const t=AC.currentTime+(when||0);
+  const o=AC.createOscillator(), g=AC.createGain(); o.type=type||"sine"; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02); }catch(e){} }
+const sGood=()=>{ beep(660,.12); beep(990,.16,"sine",.09); };
+const sBad =()=>{ beep(220,.25,"triangle"); };
+const sWin =()=>{ [523,659,784,1046].forEach((f,i)=>beep(f,.18,"sine",i*.11)); };
+
+const KEY="arcade-ia-v1", app=document.getElementById("app");
+let S;
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S.best)); }catch(e){} syncArcade(); }
+// ---- Classement de la communauté : envoi de la note /20 de chaque session (si connecté) ----
+const ARC = {me:null, sent:{}};
+async function syncArcade(){
+  if(!window.CDQ || !CDQ.sb || !ARC.me || !ARC.me.pseudo || !S) return;
+  for(const d of SESSIONS){ const b=S.best[d.id]; const n=b?sessNote(b):null;
+    if(n==null || ARC.sent[d.id]>=n) continue;
+    try{ const {error}=await CDQ.sb.rpc("submit_arcade",{p_session:d.id,p_note:n}); if(!error) ARC.sent[d.id]=n; }catch(e){} }
+}
+function shuffle(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const sgn = d => (d>0?"+":d<0?"−":"±")+Math.abs(d)+" $";
+const fmtT = t => { const s=Math.floor(t); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+const D = () => SESSIONS[S.s];
+const B = () => (S.best[D().id] = S.best[D().id] || {});
+
+function start(data){
+  S = Object.assign({view:"home", prev:"home", s:0, best:load(), vf:null, as:null, pq:null}, data && data.S ? data.S : {});
+  render();
+}
+function render(){
+  const inS = S.view!=="home";
+  document.getElementById("fbtn").hidden = !inS || S.view==="fiches" || S.view==="cours" || S.view==="hub";
+  document.getElementById("crumb").textContent = inS ? "← Session "+D().n+" · "+D().short : "Arcade-IA";
+  document.getElementById("crumb").dataset.act = inS && S.view!=="hub" ? "hub" : "home";
+  document.getElementById("sbtn").textContent = "Son : "+(SOUND?"oui":"non");
+  ({home:vHome, hub:vHub, vf:vVF, vfEnd:vVFEnd, as:vAS, asEnd:vASEnd, pq:vPQ, pqEnd:vPQEnd, fiches:vFiches, cours:vCours})[S.view]();
+}
+
+function vHome(){
+  app.innerHTML = `
+  <header class="stack"><h1>Arcade-<span style="color:var(--accent)">IA</span></h1>
+  <p class="muted">Une évaluation par session : d'abord le cours, puis les tests notés — un simulateur, un Vrai ou Faux chronométré et un jeu de paires, avec les fiches de révision toujours à portée de main.</p></header>
+  <div class="sess">${SESSIONS.map((s,i)=>{ const b=S.best[s.id]||{}; const done=[b.note,b.vfn2,b.as].filter(x=>x!=null).length, sn=sessNote(b);
+    return `<button class="scard" data-act="open" data-i="${i}"><span class="num">${s.n}</span><span class="tx"><b>${s.short}</b><span class="muted small">${s.sim.name} · Vrai ou Faux · Paires</span></span>
+    ${sn!=null?`<span class="mono" style="font-weight:700;color:var(--gold)">${fmtN(sn)} / 20</span>`:`<span class="dots" aria-label="${done} test(s) sur 3 déjà notés">${[0,1,2].map(k=>`<i class="${k<done?"on":""}"></i>`).join("")}</span>`}</button>`; }).join("")}</div>
+  <p class="muted small">Évaluation pédagogique notée sur 20, aucun conseil en investissement. Tes records restent sur cet appareil${ARC.me&&ARC.me.pseudo?` et ta meilleure note de chaque session part au <a href="https://tokenforgefan.github.io/chaine-des-quiz/#classement?onglet=arcade">classement Arcade</a>`:` · <a href="${window.CDQ?CDQ.loginUrl():"#"}">Connecte-toi</a> pour entrer dans le classement`}.</p>`;
+}
+
+function sessBox(){
+  const b=B(), n=sessNote(b);
+  const parts=[[D().sim.name,b.note],["Vrai ou Faux",b.vfn2],["Les Paires",b.as!=null?noteAS(b.as):null]];
+  return `<div class="fb ${n==null?"ne":n>=10?"ok":"ko"}"><span class="res">Note de la session ${D().n} : ${n==null?"à compléter":fmtN(n)+" / 20 · "+mention(n)}</span>
+  <span class="small">${parts.map(x=>x[0]+" "+(x[1]==null?"—":fmtN(x[1])+"/20")).join(" · ")}${n==null?" — joue les 3 tests pour l'obtenir.":" — moyenne de tes meilleures notes."}</span></div>`;
+}
+function vHub(){
+  const s=D(), b=B();
+  app.innerHTML = `
+  <header class="stack"><span class="eyebrow">Session ${s.n}</span><h1>${s.title}</h1></header>${b.cours?sessBox():""}
+  <button class="game" data-act="cours"><span class="tag d">1 · COURS</span><span class="g"><b>${b.cours?"Revoir le cours":"Commencer par le cours"}</b><span class="muted">Les ${s.notions.length} notions clés de la session, avec un exemple pour chacune. À lire avant les tests.</span></span><span class="rec">Statut<b>${b.cours?"Lu":"À lire"}</b></span></button>
+  <p class="eyebrow" style="margin-top:8px">2 · Tests ${b.cours?"":"(verrouillés tant que le cours n'est pas lu)"} · chaque mauvaise réponse te pénalise</p>
+  <button class="game" data-act="pqStart" ${b.cours?"":"disabled"}><span class="tag a">${s.sim.tag}</span><span class="g"><b>${s.sim.name}</b><span class="muted">${s.sim.desc}</span></span>
+    <span class="rec">Meilleure note<b>${b.note!=null? fmtN(b.note)+" / 20":"—"}</b></span></button>
+  <button class="game" data-act="vfStart" ${b.cours?"":"disabled"}><span class="tag c">60 s</span><span class="g"><b>Vrai ou Faux éclair</b><span class="muted">Un maximum d'affirmations en une minute. Noté sur 20 : il faut au moins 20 réponses justes sans faute pour 20/20. Chaque erreur annule une bonne réponse.</span></span>
+    <span class="rec">Meilleure note<b>${b.vfn2!=null? fmtN(b.vfn2)+" / 20":"—"}</b></span></button>
+  <button class="game" data-act="asStart" ${b.cours?"":"disabled"}><span class="tag b">DUO</span><span class="g"><b>Les Paires</b><span class="muted">Relie chaque mot du cours à sa définition, le plus vite possible. Noté au chrono : 0:50 ou moins = 20/20, puis −1 point par tranche de 10 s. Une erreur coûte 5 secondes.</span></span>
+    <span class="rec">Meilleure note<b>${b.as!=null? noteAS(b.as)+" / 20":"—"}</b></span></button>
+`;
+}
+
+/* ---------- Vrai ou Faux ---------- */
+function vfStart(){ S.vf={deck:shuffle(D().vf.length), i:0, t:60, score:0, streak:0, ok:0, n:0, miss:[], wait:false, last:""}; S.view="vf"; }
+const mult = () => Math.min(4, 1+Math.floor(S.vf.streak/3));
+function vVF(){
+  const g=S.vf, st=D().vf[g.deck[g.i]];
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Temps <b id="vt">${Math.ceil(g.t)}</b> s</span><span>Score <b>${g.score}</b></span><span class="muted">Série <b>${g.streak}</b> · ×${mult()}</span></div>
+  <button class="link" data-act="hub">Quitter</button></div>
+  <div class="prog"><i id="vb" style="width:${g.t/60*100}%"></i></div>
+  <div class="card">${st[0]}</div>
+  ${g.wait ? `<div class="fb ko" role="status"><span class="res">Raté (−5 points) · c'était ${st[1]?"VRAI":"FAUX"}</span><span>${st[2]}</span></div>
+     <button class="btn" data-act="vfNext" id="go">Continuer</button><p class="muted small">Le chrono est en pause pendant que tu lis.</p>`
+   : `<div class="vf"><button class="f" data-act="vfAns" data-v="0">FAUX</button><button class="v" data-act="vfAns" data-v="1">VRAI</button></div>
+     <p class="muted small">${g.last || "Au clavier : flèche gauche pour FAUX, flèche droite pour VRAI."}</p>`}`;
+  if(g.wait) document.getElementById("go").focus({preventScroll:true});
+}
+function vfAns(v){
+  const g=S.vf, st=D().vf[g.deck[g.i]]; g.n++;
+  if(v===st[1]){ sGood(); const p=10*mult(); g.score+=p; g.streak++; g.ok++; g.last="Juste, +"+p+" points."; vfAdvance(); }
+  else { sBad(); g.score-=5; g.streak=0; g.miss.push(g.deck[g.i]); g.wait=true; }
+}
+function vfAdvance(){ const g=S.vf; g.wait=false; g.i++; if(g.i>=g.deck.length) vfEnd(); }
+function vfEnd(){ sWin(); const g=S.vf, b=B(); g.note=noteVF(g.ok,g.n-g.ok); g.rec = b.vfn2==null || g.note>b.vfn2; if(g.rec) b.vfn2=g.note; if(b.vf==null || g.score>b.vf) b.vf=g.score; save(); S.view="vfEnd"; }
+function vVFEnd(){
+  const g=S.vf, V=D().vf;
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">Vrai ou Faux éclair · terminé</span>
+  <div class="row"><div><div class="big">${fmtN(g.note)}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><div class="big">${g.ok} / ${g.n}</div><span class="muted">bonnes réponses</span></div><div><div class="big">${g.score}</div><span class="muted">points</span></div></div>
+  <p>${g.rec ? "C'est ta meilleure note." : "Meilleure note : "+fmtN(B().vfn)+" / 20."} Barème : (bonnes réponses − erreurs) ÷ réponses données × 20, avec au moins 20 réponses attendues. 20 justes sans faute = 20/20 ; 15 justes sans faute = 15/20.</p>${sessBox()}
+  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="vfStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
+  ${g.miss.length ? `<section class="panel"><h3>À revoir</h3>${g.miss.map(i=>`<div class="miss"><b>${V[i][0]}</b><span><span class="${V[i][1]?"oui":"non"}">${V[i][1]?"Vrai":"Faux"}.</span> ${V[i][2]}</span></div>`).join("")}</section>`:""}`;
+}
+
+/* ---------- Les Paires ---------- */
+function asStart(){ const N=D().notions.length, R=Math.min(3,Math.floor(N/5));
+  S.as={pool:shuffle(N).slice(0,R*5), R, r:0, t:0, err:0, sel:null, done:[], bad:null, ex:"", defs:[]}; asRound(); S.view="as"; }
+function asRound(){ const g=S.as, ids=g.pool.slice(g.r*5, g.r*5+5); g.terms=ids; g.defs=shuffle(5).map(k=>ids[k]); g.done=[]; g.sel=null; g.bad=null; }
+function vAS(){
+  const g=S.as, N=D().notions;
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Manche <b>${g.r+1}</b> / ${g.R}</span><span>Chrono <b id="at">${fmtT(g.t)}</b></span><span class="muted">Erreurs <b>${g.err}</b></span></div>
+  <button class="link" data-act="hub">Quitter</button></div>
+  <p class="muted small">Choisis un mot, puis touche sa définition.</p>
+  <div class="chips">${g.terms.map(i=>`<button class="chip" data-act="asTerm" data-i="${i}" aria-pressed="${g.sel===i}" ${g.done.includes(i)?"disabled":""}>${N[i][0]}</button>`).join("")}</div>
+  <div class="stack" style="gap:8px">${g.defs.map(i=> g.done.includes(i)
+     ? `<div class="def done"><b>${N[i][0]}</b> · ${N[i][1]}</div>`
+     : `<button class="def ${g.bad===i?"bad":""}" data-act="asDef" data-i="${i}">${N[i][1]}</button>`).join("")}</div>
+  <p class="small" role="status">${g.ex}</p>`;
+}
+function asDef(i){
+  const g=S.as, N=D().notions; g.bad=null;
+  if(g.sel==null){ g.ex="Choisis d'abord un mot dans la liste du haut."; return; }
+  if(g.sel===i){ sGood(); g.done.push(i); g.sel=null; g.ex="Juste. Exemple : "+N[i][2]+".";
+    if(g.done.length===5){ g.r++; if(g.r===g.R){ sWin(); const b=B(); g.rec = b.as==null || Math.round(g.t)<b.as; if(g.rec){ b.as=Math.round(g.t); save(); } S.view="asEnd"; } else asRound(); } }
+  else { sBad(); g.err++; g.t+=5; g.bad=i; g.ex="Ce n'est pas ça : 5 secondes de pénalité. Réessaie."; }
+}
+function vASEnd(){
+  const g=S.as, N=D().notions;
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">Les Paires · terminé</span>
+  <div class="row"><div><div class="big">${fmtN(noteAS(Math.round(g.t)))}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><div class="big">${fmtT(g.t)}</div><span class="muted">temps final</span></div><div><div class="big">${g.err}</div><span class="muted">erreurs</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtT(B().as)+" ("+noteAS(B().as)+" / 20)."} Barème : 0:50 ou moins = 20/20, puis 1 point de moins par tranche de 10 s (pénalités comprises). Tu as révisé ${g.pool.length} notions sur ${N.length} : chaque partie en tire d'autres.</p>
+  ${sessBox()}<div class="bar" style="justify-content:flex-start"><button class="btn" data-act="asStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>
+  <section class="panel"><h3>Les notions de cette partie</h3>${g.pool.map(i=>`<div class="miss"><b>${N[i][0]}</b><span>${N[i][1]}</span><span class="muted">${N[i][2]}</span></div>`).join("")}</section>`;
+}
+
+/* ---------- Simulateur ---------- */
+function pqStart(){ S.pq={si:0, node:"a", ctx:{}, out:null, hist:[]}; S.view="pq"; }
+function panel(sc, nd){
+  if(sc.book) return `<div class="mkt"><div class="o">Meilleur acheteur (bid)<b>0,${sc.book[0]} $</b></div><div class="n">Meilleur vendeur (ask)<b>0,${sc.book[1]} $</b></div></div>`;
+  const m=nd.m||sc.m;
+  if(m) return `<div class="mkt"><div class="o">OUI<b>0,${String(m[0]).padStart(2,"0")} $</b></div><div class="n">NON<b>0,${String(m[1]).padStart(2,"0")} $</b></div></div>`;
+  if(sc.facts) return `<div class="mkt">${sc.facts.map(f=>`<div class="z">${f[0]}<b>${f[1]}</b></div>`).join("")}</div>`;
+  return "";
+}
+function vPQ(){
+  const g=S.pq, SC=D().sc, sc=SC[g.si], nd=sc.nodes[g.node], pts=g.hist.reduce((a,x)=>a+x.p,0);
+  app.innerHTML = `
+  <div class="bar"><div class="hud"><span>Situation <b>${g.si+1}</b> / ${SC.length}</span></div><button class="link" data-act="hub">Quitter</button></div>
+  <div class="prog"><i style="width:${(g.si+(g.out?1:0))/SC.length*100}%"></i></div>
+  <section class="panel"><span class="eyebrow">${sc.t}</span><h2>${sc.q}</h2>${panel(sc,nd)}
+  ${g.out ? `<div class="fb ${g.out.p===4?"ok":g.out.p===0?"ko":"ne"}" role="status"><span class="res">${PTS[g.out.p]}</span><span>${g.out.r}</span></div>
+      <div class="stack" style="gap:4px"><span class="eyebrow">À retenir · ${sc.c}</span><p>${sc.lesson}</p></div>
+      <button class="btn" data-act="pqNext" id="go">${g.si===SC.length-1?"Voir ma note":"Situation suivante"}</button>`
+   : `<p>${nd.x}</p><div class="stack" style="gap:8px">${nd.ch.map((c,k)=>`<button class="choice" data-act="pqPick" data-k="${k}">${c.l}${c.s?`<span>${c.s}</span>`:""}</button>`).join("")}</div>`}
+  </section>`;
+  if(g.out) document.getElementById("go").focus({preventScroll:true});
+}
+function pqPick(k){
+  const g=S.pq, SC=D().sc, sc=SC[g.si], res=sc.nodes[g.node].ch[k].f(g.ctx);
+  if(res.to){ g.node=res.to; return; }
+  const sco=SCORES[D().id+"-"+g.si+"-"+g.node], p=(sco && sco[k]!=null) ? sco[k] : 0;
+  g.out=Object.assign({},res,{p}); (p===4?sGood:p===0?sBad:()=>{})(); g.hist.push({p});
+}
+function pqNext(){
+  const g=S.pq, SC=D().sc;
+  if(g.si<SC.length-1){ g.si++; g.node="a"; g.ctx={}; g.out=null; }
+  else { sWin(); const b=B(), n=noteOf(g); g.rec = b.note==null || n>b.note; if(g.rec){ b.note=n; save(); } S.view="pqEnd"; }
+}
+function vPQEnd(){
+  const g=S.pq, SC=D().sc, n=noteOf(g), rk = n>=18?"Expert de la session" : n>=14?"Fin analyste" : n>=10?"Joueur prudent" : "Apprenti", best=g.hist.filter(x=>x.p===4).length;
+  app.innerHTML = `
+  <section class="panel"><span class="eyebrow">${D().sim.name} · bilan</span>
+  <div class="row"><div><div class="big">${fmtN(n)}<span class="muted" style="font-size:1.2rem"> / 20</span></div><span class="muted">ta note</span></div><div><h2>${rk}</h2><span class="muted">ton rang</span></div><div><div class="big">${best} / ${SC.length}</div><span class="muted">meilleurs choix</span></div></div>
+  <p>${g.rec ? "C'est ton record." : "Record à battre : "+fmtN(B().note)+" / 20."} La note juge tes décisions, pas la chance : un pari qui a payé ne vaut pas un bon choix.</p>${sessBox()}
+  ${SC.map((s,i)=>`<div class="line"><span><b>${s.t}</b><br><span class="muted small">${s.c}</span></span><b class="mono ${g.hist[i].p===4?"oui":g.hist[i].p===0?"non":""}">${g.hist[i].p} / 4</b></div>`).join("")}
+  <div class="bar" style="justify-content:flex-start"><button class="btn" data-act="pqStart">Rejouer</button><button class="link" data-act="hub">Autres jeux de la session</button></div></section>`;
+}
+
+/* ---------- Cours ---------- */
+function vCours(){
+  const s=D(), N=s.notions;
+  app.innerHTML = `
+  <header class="stack"><span class="eyebrow">Session ${s.n} · Cours</span><h1>${s.title}</h1>
+  <p class="muted">Lis chaque notion et son exemple. Ensuite, passe aux tests : chaque mauvaise réponse fait baisser ta note, ton score ou ton temps.</p></header>
+  <div class="stack" style="gap:8px">${N.map((n,k)=>`<div class="fiche"><span class="muted small">Notion ${k+1} / ${N.length}</span><b>${n[0]}</b><span>${n[1]}.</span><span class="muted small">Exemple : ${n[2]}.</span></div>`).join("")}</div>
+  <button class="btn" data-act="coursDone">J'ai appris le cours, passer aux tests →</button>`;
+}
+/* ---------- Fiches ---------- */
+function vFiches(){
+  const N=D().notions;
+  app.innerHTML = `
+  <div class="bar"><h2>Fiches · Session ${D().n}</h2><button class="btn" data-act="back">${S.prev==="hub"?"Retour":"Reprendre le jeu"}</button></div>
+  <input class="search" id="search" type="search" placeholder="Chercher un mot…" aria-label="Chercher dans les fiches">
+  <div class="stack" style="gap:8px" id="list">${N.map(n=>`<div class="fiche"><b>${n[0]}</b><span>${n[1]}.</span><span class="muted small">Exemple : ${n[2]}.</span></div>`).join("")}</div>`;
+  document.getElementById("search").addEventListener("input", e=>{
+    const q=e.target.value.toLowerCase();
+    document.querySelectorAll("#list .fiche").forEach(f=>{ f.hidden = !f.textContent.toLowerCase().includes(q); });
+  });
+}
+
+/* ---------- Événements ---------- */
+document.addEventListener("click", ev=>{
+  const b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
+  const a=b.dataset.act;
+  if(a==="home") S.view="home";
+  else if(a==="open"){ S.s=+b.dataset.i; S.view="hub"; }
+  else if(a==="hub") S.view="hub";
+  else if(a==="snd"){ SOUND=!SOUND; try{localStorage.setItem("arcade-son",SOUND?"1":"0")}catch(e){} }
+  else if(a==="fiches"){ S.prev=S.view; S.view="fiches"; }
+  else if(a==="back") S.view=S.prev;
+  else if(a==="cours") S.view="cours";
+  else if(a==="coursDone"){ B().cours=true; save(); S.view="hub"; }
+  else if(a==="vfStart") vfStart();
+  else if(a==="vfAns") vfAns(b.dataset.v==="1");
+  else if(a==="vfNext") vfAdvance();
+  else if(a==="asStart") asStart();
+  else if(a==="asTerm"){ S.as.sel=+b.dataset.i; S.as.bad=null; }
+  else if(a==="asDef") asDef(+b.dataset.i);
+  else if(a==="pqStart") pqStart();
+  else if(a==="pqPick") pqPick(+b.dataset.k);
+  else if(a==="pqNext") pqNext();
+  render();
+  if(/Start|home|open|hub|fiches|back|pqNext|cours/.test(a)) window.scrollTo(0,0);
+});
+document.addEventListener("keydown", ev=>{
+  if(!S || S.view!=="vf" || S.vf.wait) return;
+  if(ev.key==="ArrowLeft"){ vfAns(false); render(); }
+  else if(ev.key==="ArrowRight"){ vfAns(true); render(); }
+});
+setInterval(()=>{
+  if(!S) return;
+  if(S.view==="vf" && !S.vf.wait){
+    S.vf.t-=.1;
+    if(S.vf.t<=0){ S.vf.t=0; vfEnd(); render(); return; }
+    const t=document.getElementById("vt"), bar=document.getElementById("vb");
+    if(t) t.textContent=Math.ceil(S.vf.t); if(bar) bar.style.width=(S.vf.t/60*100)+"%";
+  } else if(S.view==="as"){
+    S.as.t+=.1; const t=document.getElementById("at"); if(t) t.textContent=fmtT(S.as.t);
+  }
+},100);
+start({});
+if(window.CDQ){ CDQ.menu("arcade"); CDQ.me().then(u=>{ ARC.me=u; if(S && S.view==="home") render(); syncArcade(); }); }
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+
+</body>
+</html>
